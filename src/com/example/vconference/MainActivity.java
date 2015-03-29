@@ -13,7 +13,7 @@ public class MainActivity extends Activity {
 		System.out.println("asdfkl;ajsd;fjka;sldfjk");
 		
 		System.out.println("edited");
-		System.out.println("okokok asdflkajsdf;klj");
+		System.out.println("okokok ASD;LKFJ ;klj");
 		System.out.println("okok zxqwer ok aa");
 		
 	}
