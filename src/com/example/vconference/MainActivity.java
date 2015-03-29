@@ -12,7 +12,7 @@ public class MainActivity extends Activity {
 		setContentView(R.layout.activity_main);
 		System.out.println("asdfkl;ajsd;fjka;sldfjk");
 		
-		System.out.println("new line");
+		System.out.println("new again");
 		
 	}
 
