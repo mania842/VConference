@@ -10,7 +10,7 @@ public class MainActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
-		System.out.println("what");
+		System.out.println("asdfkl;ajsd;fjka;sldfjk");
 		
 		System.out.println("new line");
 		
