@@ -12,7 +12,7 @@ public class MainActivity extends Activity {
 		setContentView(R.layout.activity_main);
 		System.out.println("asdfkl;ajsd;fjka;sldfjk");
 		
-		System.out.println("edited line");
+		System.out.println("edited");
 		System.out.println("okokok");
 		
 	}
