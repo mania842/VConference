@@ -25,7 +25,7 @@
         android:orientation="vertical" >
 
         <EditText
-            android:id="@+id/editText_email"
+            android:id="@+id/editText_user"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/email"
@@ -48,7 +48,17 @@
             android:layout_marginBottom="10dp"
             android:text="@string/sign_in_automatically"
             android:textColor="#808080" />
-
+	
+        <TextView 
+            android:id="@+id/textView_connection"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="@string/the_internet_is_disconnected"
+            android:layout_marginBottom="5dp"
+            android:textColor="#ff0000"
+            android:visibility="gone"/>
+        
         <Button
             android:id="@+id/btn_signIn"
             android:layout_width="match_parent"
