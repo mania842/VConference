@@ -7,25 +7,33 @@
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/layout_sign"
+        android:layout_above="@+id/layout_signup"
         android:layout_marginBottom="10dp"
         android:background="#f0f0f0"
         android:gravity="center_horizontal"
         android:padding="5dp"
-        android:text="@string/sign_id"
+        android:text="@string/sign_up"
         android:textColor="#ff0d71b3"
         android:textSize="17sp"
         android:textStyle="bold" />
 
     <LinearLayout
-        android:id="@+id/layout_sign"
+        android:id="@+id/layout_signup"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignParentBottom="true"
         android:orientation="vertical" >
 
         <EditText
-            android:id="@+id/editText_user"
+            android:id="@+id/signup_fullname"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/full_name"
+            android:inputType="text"
+            android:textSize="15sp" />
+        
+        <EditText
+            android:id="@+id/signup_ID"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/id"
@@ -33,21 +41,36 @@
             android:textSize="15sp" />
 
         <EditText
-            android:id="@+id/editText_password"
+            android:id="@+id/signup_password"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="@string/password"
             android:inputType="textPassword"
             android:textSize="15sp" />
-
-        <CheckBox
-            android:id="@+id/checkBox_autoSign"
-            android:layout_width="wrap_content"
+        
+        <EditText
+            android:id="@+id/signup_confirm_password"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginBottom="10dp"
-            android:text="@string/sign_in_automatically"
-            android:textColor="#808080" />
+            android:hint="@string/password"
+            android:inputType="textPassword"
+            android:textSize="15sp" />
+        
+        <EditText
+            android:id="@+id/signup_phone"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/phone"
+            android:inputType="phone"
+            android:textSize="15sp" />
+
+        <EditText
+            android:id="@+id/signup_email"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/email"
+            android:inputType="textEmailAddress"
+            android:textSize="15sp" />
 	
         <TextView 
             android:id="@+id/textView_connection"
@@ -60,23 +83,23 @@
             android:visibility="gone"/>
         
         <Button
-            android:id="@+id/btn_signIn"
+            android:id="@+id/btn_createID"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="5dp"
             android:background="@drawable/blue_button"
             android:onClick="buttonActions"
-            android:text="@string/sign_in"
+            android:text="@string/createID"
             android:textColor="#ffffff"
             android:textSize="15sp" />
 
         <Button
-            android:id="@+id/btn_signUp"
+            android:id="@+id/btn_cancel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@drawable/red_button"
             android:onClick="buttonActions"
-            android:text="@string/sign_up"
+            android:text="@string/cancel"
             android:textColor="#ffffff"
             android:textSize="15sp" />
     </LinearLayout>

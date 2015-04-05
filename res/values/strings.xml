@@ -1,21 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">VConference</string>
+    <string name="app_name">Video Chat Application</string>
     <string name="action_settings">Settings</string>
     <string name="hello_world">Hello world!</string>
     
     <!-- login.xml -->
-    <string name="sign_id_with_email">Sign In with Email</string>
+    <string name="sign_id">Sign In with ID</string>
     <string name="email">Email</string>
     <string name="password">Password</string>
     <string name="sign_in_automatically">Sign In Automatically</string>
     <string name="sign_in">Sign In</string>
 	<string name="sign_up">Sign Up</string>
+	<string name="id">ID</string>
 	
 	<string name="the_internet_is_disconnected">The internet is disconnected</string>
 	<string name="unauthorized_email_and_password">Unauthorized email and password</string>
 	<string name="email_cannot_be_blank">Email cannot be blank</string>
 	<string name="password_cannot_be_blank">Password cannot be blank</string>
+	
+	<!-- signup.xml -->
+	<string name="full_name">Full Name</string>
+	<string name="phone">Phone</string>
+	<string name="createID">Create ID</string>
+	<string name="cancel">Cancel</string>
+	
 	
 </resources>
