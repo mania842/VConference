@@ -1,12 +1,17 @@
 package com.example.vconference.ui.core;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.SmackException.NoResponseException;
+import org.jivesoftware.smack.SmackException.NotConnectedException;
 import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smackx.muc.DiscussionHistory;
 
+import android.text.TextUtils;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -20,6 +25,8 @@ import com.quickblox.chat.model.QBChatMessage;
 import com.quickblox.chat.model.QBDialog;
 import com.quickblox.core.QBEntityCallback;
 import com.quickblox.core.QBEntityCallbackImpl;
+import com.quickblox.core.exception.QBResponseException;
+import com.quickblox.core.request.QBRequestUpdateBuilder;
 
 public class GroupChatManagerImpl extends QBMessageListenerImpl<QBGroupChat> implements ChatManager {
     private static final String TAG = "GroupChatManagerImpl";
@@ -31,13 +38,70 @@ public class GroupChatManagerImpl extends QBMessageListenerImpl<QBGroupChat> imp
 
     public GroupChatManagerImpl(ChatActivity chatActivity) {
         this.chatActivity = chatActivity;
-
         groupChatManager = QBChatService.getInstance().getGroupChatManager();
     }
+    
+    public void inviteUser(QBDialog dialog, Integer userId, QBEntityCallback callback) {
+    	QBRequestUpdateBuilder requestBuilder = new QBRequestUpdateBuilder();
+    	requestBuilder.push("occupants_ids", userId); // add another users
+    	// requestBuilder.pullAll("occupants_ids", userId); // Remove yourself (user with ID 22)
+    	 
+    	groupChatManager.updateDialog(dialog, requestBuilder, callback);
+    }
+    
+    public static QBChatMessage createChatNotificationForGroupChatUpdate(QBDialog dialog) {
+        String dialogId = String.valueOf(dialog.getDialogId());
+        String roomJid = dialog.getRoomJid();
+        String occupantsIds = TextUtils.join(",", dialog.getOccupants());
+        String dialogName = dialog.getName();
+        String dialogTypeCode = String.valueOf(dialog.getType().ordinal());
+     
+        QBChatMessage chatMessage = new QBChatMessage();
+        chatMessage.setBody("optional text");
+     
+        // Add notification_type=2 to extra params when you updated a group chat 
+        //
+        chatMessage.setProperty("notification_type", "2");
+     
+        chatMessage.setProperty("_id", dialogId);
+        if (!TextUtils.isEmpty(roomJid)) {
+            chatMessage.setProperty("room_jid", roomJid);
+        }
+        chatMessage.setProperty("occupants_ids", occupantsIds);
+        if (!TextUtils.isEmpty(dialogName)) {
+            chatMessage.setProperty("name", dialogName);
+        }
+        chatMessage.setProperty("type", dialogTypeCode);
+     
+        return chatMessage;
+    }
+
 
     public void joinGroupChat(QBDialog dialog, QBEntityCallback callback){
         groupChat = groupChatManager.createGroupChat(dialog.getRoomJid());
         join(groupChat, callback);
+    }
+    
+    public Collection<Integer> getOnlineUsers() {
+    	try {
+			 return groupChat.getOnlineUsers();
+		} catch (XMPPException e) {
+			e.printStackTrace();
+		}
+    	return null;
+    }
+    
+    public Collection<Integer> getRoomUsers() {
+    	try {
+			return groupChat.getRoomUserIds();
+		} catch (NotConnectedException e) {
+			e.printStackTrace();
+		} catch (NoResponseException e) {
+			e.printStackTrace();
+		} catch (XMPPException e) {
+			e.printStackTrace();
+		}
+    	return null;
     }
 
     private void join(final QBGroupChat groupChat, final QBEntityCallback callback) {
@@ -118,4 +182,18 @@ public class GroupChatManagerImpl extends QBMessageListenerImpl<QBGroupChat> imp
     public void processError(QBGroupChat groupChat, QBChatException error, QBChatMessage originMessage){
 
     }
+
+	@Override
+	public void processMessageDelivered(QBGroupChat sender, String messageID) {
+		// TODO Auto-generated method stub
+		super.processMessageDelivered(sender, messageID);
+	}
+
+	@Override
+	public void processMessageRead(QBGroupChat sender, String messageID) {
+		// TODO Auto-generated method stub
+		super.processMessageRead(sender, messageID);
+	}
+    
+    
 }

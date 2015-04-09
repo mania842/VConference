@@ -2,14 +2,13 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical" >
 
-    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <RelativeLayout
         android:id="@+id/container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:padding="20dp">
+        android:orientation="vertical" >
 
         <EditText
             android:id="@+id/messageEdit"
@@ -25,30 +24,61 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
-            android:layout_alignParentRight="true"
+            android:layout_toLeftOf="@+id/chatAddButton"
             android:text="Send" />
 
+        <Button
+            android:id="@+id/chatAddButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:text="Add" />
+
+        <Button
+            android:id="@+id/getoccupants"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/chatAddButton"
+            android:layout_alignParentRight="true"
+            android:text="users" />
+		
+        <com.example.vconference.ui.view.OwnSurfaceView
+            android:id="@+id/cameraView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="5dp" />
+
+        <com.example.vconference.ui.view.OpponentSurfaceView
+            android:id="@+id/opponentView"
+            android:layout_width="200dp"
+            android:layout_height="220dp"
+            android:layout_below="@+id/cameraView"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="5dp" />
+        
         <ListView
             android:id="@+id/messagesContainer"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:layout_above="@+id/messageEdit"
             android:layout_alignParentLeft="false"
             android:layout_alignParentTop="false"
-            android:layout_marginBottom="20dp"
-            android:layout_above="@+id/messageEdit"
             android:layout_below="@+id/meLabel"
+            android:layout_marginBottom="20dp"
             android:layout_marginTop="10dp"
+            android:divider="@null"
             android:listSelector="@android:color/transparent"
-            android:transcriptMode="alwaysScroll"
-            android:divider="@null" />
+            android:transcriptMode="alwaysScroll" />
 
         <TextView
             android:id="@+id/meLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="left|center_vertical"
-            android:text="Me"
             android:singleLine="false"
+            android:text="Me"
             android:textSize="20dp" />
 
         <TextView
@@ -60,12 +90,12 @@
             android:textSize="20dp" />
 
         <ProgressBar
+            android:id="@+id/progressBar"
             style="?android:attr/progressBarStyleLarge"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/progressBar"
-            android:layout_centerVertical="true"
-            android:layout_centerHorizontal="true" />
-
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true" />
     </RelativeLayout>
+
 </LinearLayout>

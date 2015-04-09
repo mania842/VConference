@@ -25,5 +25,8 @@
 	<string name="createID">Create ID</string>
 	<string name="cancel">Cancel</string>
 	
+	<!-- chatroom -->
+	<string name="unknown">Unknown</string>
+	
 	
 </resources>

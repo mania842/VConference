@@ -3,6 +3,7 @@ package com.example.vconference;
 import java.util.List;
 
 import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.XMPPException;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -23,16 +24,19 @@ import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.example.vconference.custom.objects.UserData;
 import com.example.vconference.ui.ChatRoomActivity;
+import com.example.vconference.ui.ContainerActivity;
 import com.quickblox.auth.QBAuth;
 import com.quickblox.auth.model.QBSession;
 import com.quickblox.chat.QBChatService;
 import com.quickblox.core.QBEntityCallbackImpl;
-import com.quickblox.core.QBSettings;
+import com.quickblox.core.exception.BaseServiceException;
 import com.quickblox.core.exception.QBResponseException;
-import com.quickblox.core.helper.StringifyArrayList;
+import com.quickblox.core.server.BaseService;
 import com.quickblox.users.QBUsers;
 import com.quickblox.users.model.QBUser;
+import com.quickblox.videochat.core.QBVideoChatController;
 
 public class MainActivity extends Activity {
 	static final int AUTO_PRESENCE_INTERVAL_IN_SECONDS = 30;
@@ -47,7 +51,19 @@ public class MainActivity extends Activity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.login);
-
+		
+		try {
+			if (BaseService.getBaseService().getToken() != null) {
+				Log.i("user", ((VApp) getApplication()).getUser().toString());
+				Log.i("BaseService.getBaseService().getToken()", BaseService.getBaseService().getToken());
+				
+				Intent intent = new Intent(MainActivity.this, ChatRoomActivity.class);
+				startActivity(intent);
+				finish();
+			}
+		} catch (BaseServiceException e) {
+			e.printStackTrace();
+		}
 		filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
 		filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
 
@@ -82,7 +98,8 @@ public class MainActivity extends Activity {
 		if (settings.isSignInAutomatically()) {
 			editText_user.setText(settings.getEmail());
 			editText_password.setText(settings.getPassword());
-			signIn(settings.getEmail(), settings.getPassword());
+			
+			signIn(settings.getEmail(), settings.getPassword()); 
 		} else {
 			editText_user.setText(null);
 			editText_password.setText(null);
@@ -94,8 +111,6 @@ public class MainActivity extends Activity {
 		editText_user.setEnabled(false);
 		editText_password.setEnabled(false);
 
-		QBSettings.getInstance().fastConfigInit("19109", "NC8QdBBMVxdbmuv", "dMKqMTsV7JvAdMK");
-
 		if (!QBChatService.isInitialized()) {
 			QBChatService.init(getApplicationContext());
 		}
@@ -103,20 +118,23 @@ public class MainActivity extends Activity {
 		final QBUser user = new QBUser();
 		user.setLogin(userName);
 		user.setPassword(password);
-
+		
 		QBAuth.createSession(user, new QBEntityCallbackImpl<QBSession>() {
 			@Override
 			public void onSuccess(QBSession session, Bundle params) {
 				// success, login to chat
-				Log.i("Session created", "session created, token = " + session.getToken());
+//				Log.e("Session created", "session created, token = " + session.getToken());
 				String email = editText_user.getText().toString();
 				String password = editText_password.getText().toString();
 				settings.setSignInAutomatically(checkBox_autoSign.isChecked(), email, password);
 				settings.saveSettings();
 				chatService = QBChatService.getInstance();
 				user.setId(session.getUserId());
+				
+				
+				
 
-				((VideoConferenceApplication) getApplication()).setUser(user);
+				((VApp) getApplication()).setUser(user);
 				loginToChat(user);
 			}
 
@@ -186,11 +204,15 @@ public class MainActivity extends Activity {
 			public void onSuccess() {
 				try {
 					chatService.startAutoSendPresence(AUTO_PRESENCE_INTERVAL_IN_SECONDS);
+					QBVideoChatController.getInstance().initQBVideoChatMessageListener();
 				} catch (SmackException.NotLoggedInException e) {
 					e.printStackTrace();
+				} catch (XMPPException e) {
+					e.printStackTrace();
 				}
-				// go to Dialogs screen
-				Intent intent = new Intent(MainActivity.this, ChatRoomActivity.class);
+				// go to Dialogs screen TODO
+//				Intent intent = new Intent(MainActivity.this, ChatRoomActivity.class);
+				Intent intent = new Intent(MainActivity.this, ContainerActivity.class);
 				startActivity(intent);
 				finish();
 			}
@@ -224,29 +246,32 @@ public class MainActivity extends Activity {
 	}
 
 	private void signUp() {
-		final QBUser user = new QBUser("Javck@aaa", "javckpassword");
-		user.setExternalId("45345");
-		user.setFacebookId("100233453457767");
-		user.setTwitterId("182334635457");
-		user.setEmail("Javck@mail.com");
-		user.setFullName("Javck Bold");
-		user.setPhone("+18904567812");
-		StringifyArrayList<String> tags = new StringifyArrayList<String>();
-		tags.add("car");
-		tags.add("man");
-		user.setTags(tags);
-		user.setWebsite("www.mysite.com");
-
-		QBUsers.signUp(user, new QBEntityCallbackImpl<QBUser>() {
+		QBAuth.createSession(new QBEntityCallbackImpl<QBSession>() {
 			@Override
-			public void onSuccess(QBUser user, Bundle args) {
+			public void onSuccess(QBSession session, Bundle params) {
+				final QBUser user = new QBUser("mania842", "lymn8421");
+				user.setEmail("asdf@gmail.com");
+				user.setFullName("Yong");
+				user.setPhone("19175049043");
+				user.setCustomDataAsObject(new UserData("»ì¸®¶ó"));
 
+				QBUsers.signUp(user, new QBEntityCallbackImpl<QBUser>() {
+					@Override
+					public void onSuccess(QBUser user, Bundle args) {
+
+					}
+
+					@Override
+					public void onError(List<String> errors) {
+					}
+				});
 			}
 
 			@Override
 			public void onError(List<String> errors) {
 			}
 		});
+		
 
 	}
 

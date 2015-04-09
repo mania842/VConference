@@ -21,18 +21,30 @@ import android.widget.ListView;
 import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.vconference.R;
-import com.example.vconference.VideoConferenceApplication;
+import com.example.vconference.VApp;
 import com.example.vconference.ui.adapter.ChatAdapter;
 import com.example.vconference.ui.core.ChatManager;
 import com.example.vconference.ui.core.GroupChatManagerImpl;
 import com.example.vconference.ui.core.PrivateChatManagerImpl;
+import com.example.vconference.ui.view.OpponentSurfaceView;
+import com.example.vconference.ui.view.OwnSurfaceView;
 import com.quickblox.chat.QBChatService;
+import com.quickblox.chat.QBPrivateChat;
+import com.quickblox.chat.exception.QBChatException;
+import com.quickblox.chat.listeners.QBMessageListener;
 import com.quickblox.chat.model.QBChatMessage;
 import com.quickblox.chat.model.QBDialog;
 import com.quickblox.core.QBEntityCallbackImpl;
 import com.quickblox.core.request.QBRequestGetBuilder;
+import com.quickblox.users.model.QBUser;
+import com.quickblox.videochat.core.QBVideoChatController;
+import com.quickblox.videochat.model.listeners.OnQBVideoChatListener;
+import com.quickblox.videochat.model.objects.CallState;
+import com.quickblox.videochat.model.objects.CallType;
+import com.quickblox.videochat.model.objects.VideoChatConfig;
 
 public class ChatActivity extends Activity {
 	private static final String TAG = ChatActivity.class.getSimpleName();
@@ -53,6 +65,13 @@ public class ChatActivity extends Activity {
 
 	private ArrayList<QBChatMessage> history;
 
+	private Button addButton;
+	private Button getOccupants;
+
+	private OpponentSurfaceView opponentView;
+	private OwnSurfaceView myView;
+	private VideoChatConfig videoChatConfig;
+
 	public static void start(Context context, Bundle bundle) {
 		Intent intent = new Intent(context, ChatActivity.class);
 		intent.putExtras(bundle);
@@ -61,15 +80,50 @@ public class ChatActivity extends Activity {
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
+
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_chat);
 		initViews();
+
+		initVideoCalls();
+	}
+
+	public void initVideoCalls() {
+		// VideoChat settings
+		videoChatConfig = getIntent().getParcelableExtra(VideoChatConfig.class.getCanonicalName());
+
+		QBUser opponentUser = new QBUser(2758477);
+
+		videoChatConfig = QBVideoChatController.getInstance().callFriend(opponentUser, CallType.VIDEO_AUDIO, null);
+		opponentView = (OpponentSurfaceView) findViewById(R.id.opponentView);
+		myView = (OwnSurfaceView) findViewById(R.id.cameraView);
+		myView.setCameraDataListener(new OwnSurfaceView.CameraDataListener() {
+			@Override
+			public void onCameraDataReceive(byte[] data) {
+				if (videoChatConfig != null && videoChatConfig.getCallType() != CallType.VIDEO_AUDIO) {
+					return;
+				}
+				QBVideoChatController.getInstance().sendVideo(data);
+			}
+		});
+
+		// Set video chat listener
+		
+		QBUser videoUser = ((VApp) getApplication()).getUser();
+		
+		try {
+			QBVideoChatController.getInstance().setQBVideoChatListener(videoUser, qbVideoChatListener);
+		} catch (XMPPException e) {
+			e.printStackTrace();
+		}
 	}
 
 	@Override
 	public void onBackPressed() {
 		try {
 			chat.release();
+			myView.closeCamera();
+			QBVideoChatController.getInstance().finishVideoChat(videoChatConfig);
 		} catch (XMPPException e) {
 			Log.e(TAG, "failed to release chat", e);
 		}
@@ -80,6 +134,9 @@ public class ChatActivity extends Activity {
 		messagesContainer = (ListView) findViewById(R.id.messagesContainer);
 		messageEditText = (EditText) findViewById(R.id.messageEdit);
 		sendButton = (Button) findViewById(R.id.chatSendButton);
+
+		addButton = (Button) findViewById(R.id.chatAddButton);
+		getOccupants = (Button) findViewById(R.id.getoccupants);
 
 		TextView meLabel = (TextView) findViewById(R.id.meLabel);
 		TextView companionLabel = (TextView) findViewById(R.id.companionLabel);
@@ -94,6 +151,7 @@ public class ChatActivity extends Activity {
 
 		mode = (Mode) intent.getSerializableExtra(EXTRA_MODE);
 		switch (mode) {
+		case PUBLIC_GROUP:
 		case GROUP:
 			chat = new GroupChatManagerImpl(this);
 			container.removeView(meLabel);
@@ -121,11 +179,11 @@ public class ChatActivity extends Activity {
 
 			break;
 		case PRIVATE:
-			Integer opponentID = ((VideoConferenceApplication) getApplication()).getOpponentIDForPrivateDialog(dialog);
+			Integer opponentID = ((VApp) getApplication()).getOpponentIDForPrivateDialog(dialog);
 
 			chat = new PrivateChatManagerImpl(this, opponentID);
 
-			companionLabel.setText(((VideoConferenceApplication) getApplication()).getDialogsUsers().get(opponentID).getLogin());
+			companionLabel.setText(((VApp) getApplication()).getDialogsUsers().get(opponentID).getLogin());
 
 			// Load CHat history
 			//
@@ -162,6 +220,52 @@ public class ChatActivity extends Activity {
 					showMessage(chatMessage);
 				}
 			}
+		});
+
+		addButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+
+				((GroupChatManagerImpl) chat).inviteUser(dialog, 2759018, new QBEntityCallbackImpl() {
+					@Override
+					public void onSuccess() {
+						for (Integer userID : dialog.getOccupants()) {
+
+							QBChatMessage chatMessage = GroupChatManagerImpl.createChatNotificationForGroupChatUpdate(dialog);
+							long time = new Date().getTime();
+							chatMessage.setProperty("date_sent", time + "");
+							QBChatService chatService = QBChatService.getInstance();
+							QBPrivateChat chat = QBChatService.getInstance().getPrivateChatManager().getChat(userID);
+							if (chat == null) {
+								chat = chatService.getPrivateChatManager().createChat(userID, null);
+							}
+
+							try {
+								chat.sendMessage(chatMessage);
+							} catch (Exception e) {
+								// error
+							}
+						}
+					}
+
+					@Override
+					public void onError(List list) {
+						AlertDialog.Builder dialog = new AlertDialog.Builder(ChatActivity.this);
+						dialog.setMessage("error when join group chat: " + list.toString()).create().show();
+					}
+				});
+
+			}
+		});
+		getOccupants.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				System.out.println("Clicked");
+				System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
+//				System.out.println(((GroupChatManagerImpl) chat).getRoomUsers());
+				System.out.println(((GroupChatManagerImpl) chat).getOnlineUsers());
+			}
+
 		});
 	}
 
@@ -210,7 +314,91 @@ public class ChatActivity extends Activity {
 		messagesContainer.setSelection(messagesContainer.getCount() - 1);
 	}
 
+	OnQBVideoChatListener qbVideoChatListener = new OnQBVideoChatListener() {
+
+		@Override
+		public void onCameraDataReceive(byte[] videoData) {
+			//
+		}
+
+		@Override
+		public void onMicrophoneDataReceive(byte[] audioData) {
+			QBVideoChatController.getInstance().sendAudio(audioData);
+		}
+
+		@Override
+		public void onOpponentVideoDataReceive(final byte[] videoData) {
+			opponentView.render(videoData);
+		}
+
+		@Override
+		public void onOpponentAudioDataReceive(byte[] audioData) {
+			QBVideoChatController.getInstance().playAudio(audioData);
+		}
+
+		@Override
+		public void onProgress(boolean progress) {
+			// progressBar.setVisibility(progress ? View.VISIBLE : View.GONE);
+		}
+
+		@Override
+		public void onVideoChatStateChange(CallState callState, VideoChatConfig receivedVideoChatConfig) {
+			videoChatConfig = receivedVideoChatConfig;
+
+			switch (callState) {
+			case ON_CALL_START:
+				Toast.makeText(getBaseContext(), "ON_CALL_START", Toast.LENGTH_SHORT).show();
+
+				progressBar.setVisibility(View.INVISIBLE);
+				break;
+			case ON_CANCELED_CALL:
+				Toast.makeText(getBaseContext(), "ON_CANCELED_CALL", Toast.LENGTH_SHORT).show();
+
+				videoChatConfig = null;
+//				if (alertDialog != null && alertDialog.isShowing()) {
+//					alertDialog.dismiss();
+//				}
+//				autoCancelHandler.removeCallbacks(autoCancelTask);
+
+				break;
+			case ON_CALL_END:
+				Toast.makeText(getBaseContext(), "ON_CALL_END", Toast.LENGTH_SHORT).show();
+
+				// clear opponent view
+				opponentView.clear();
+//				startStopVideoCallBtn.setText("Call user");
+				break;
+			case ACCEPT:
+				Toast.makeText(getBaseContext(), "ACCEPT", Toast.LENGTH_SHORT).show();
+				QBVideoChatController.getInstance().acceptCallByFriend(videoChatConfig, null);
+//				showIncomingCallDialog();
+				break;
+			case ON_ACCEPT_BY_USER:
+				Toast.makeText(getBaseContext(), "ON_ACCEPT_BY_USER", Toast.LENGTH_SHORT).show();
+
+				QBVideoChatController.getInstance().onAcceptFriendCall(videoChatConfig, null);
+				break;
+			case ON_REJECTED_BY_USER:
+				Toast.makeText(getBaseContext(), "ON_REJECTED_BY_USER", Toast.LENGTH_SHORT).show();
+
+				progressBar.setVisibility(View.INVISIBLE);
+				break;
+			case ON_CONNECTED:
+				Toast.makeText(getBaseContext(), "ON_CONNECTED", Toast.LENGTH_SHORT).show();
+
+				progressBar.setVisibility(View.INVISIBLE);
+
+//				startStopVideoCallBtn.setText("Hung up");
+				break;
+			case ON_START_CONNECTING:
+				Toast.makeText(getBaseContext(), "ON_START_CONNECTING", Toast.LENGTH_SHORT).show();
+				break;
+			}
+		}
+	};
+
 	public static enum Mode {
-		PRIVATE, GROUP
+		PRIVATE, GROUP, PUBLIC_GROUP
 	}
+
 }

@@ -14,7 +14,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.example.vconference.R;
-import com.example.vconference.VideoConferenceApplication;
+import com.example.vconference.VApp;
 import com.example.vconference.util.TimeUtils;
 import com.quickblox.chat.model.QBChatMessage;
 import com.quickblox.users.model.QBUser;
@@ -23,8 +23,10 @@ public class ChatAdapter extends BaseAdapter {
 
     private final List<QBChatMessage> chatMessages;
     private Activity context;
+    private VApp app;
 
     public ChatAdapter(Activity context, List<QBChatMessage> chatMessages) {
+    	this.app = VApp.getInstance();
         this.context = context;
         this.chatMessages = chatMessages;
     }
@@ -65,13 +67,13 @@ public class ChatAdapter extends BaseAdapter {
         } else {
             holder = (ViewHolder) convertView.getTag();
         }
-
-        QBUser currentUser = ((VideoConferenceApplication)context.getApplication()).getUser();
+        QBUser currentUser = app.getUser();
         boolean isOutgoing = chatMessage.getSenderId() == null || chatMessage.getSenderId().equals(currentUser.getId());
         setAlignment(holder, isOutgoing);
         holder.txtMessage.setText(chatMessage.getBody());
         if (chatMessage.getSenderId() != null) {
-            holder.txtInfo.setText(chatMessage.getSenderId() + ": " + getTimeText(chatMessage));
+        	String userName = app.getUserNameById(chatMessage.getSenderId());
+            holder.txtInfo.setText(userName + ": " + getTimeText(chatMessage));
         } else {
             holder.txtInfo.setText(getTimeText(chatMessage));
         }
