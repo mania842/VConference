@@ -1,60 +1,75 @@
 package com.example.vconference.ui.adapter;
 
-import com.example.vconference.R;
+import java.util.ArrayList;
+import java.util.List;
 
-import android.content.Context;
+import android.app.Activity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.CheckBox;
-import android.widget.ImageView;
 import android.widget.TextView;
 
+import com.example.vconference.R;
+import com.example.vconference.VApp;
+import com.example.vconference.custom.objects.VUser;
+
+/**
+ * Created by igorkhomenko on 9/12/14.
+ */
 public class ContactListAdapter extends BaseAdapter {
-	private LayoutInflater inflater;
-	
-	public ContactListAdapter(Context ctx) {
-		this.inflater = LayoutInflater.from(ctx);
-	}
 
-	@Override
-	public int getCount() {
-		return 0;
-	}
+    private List<VUser> dataSource;
+    private LayoutInflater inflater;
+    private List<VUser> selected = new ArrayList<VUser>();
+    private VApp app;
 
-	@Override
-	public Object getItem(int position) {
-		return null;
-	}
+    public ContactListAdapter(List<VUser> dataSource, Activity activity) {
+    	app = (VApp) activity.getApplication();
+        this.dataSource = dataSource;
+        this.inflater = LayoutInflater.from(activity);
+    }
 
-	@Override
-	public long getItemId(int position) {
-		return 0;
-	}
+    public List<VUser> getSelected() {
+        return selected;
+    }
 
-	@Override
-	public View getView(int position, View convertView, ViewGroup parent) {
-		ViewHolder holder;
+    @Override
+    public int getCount() {
+        return dataSource.size();
+    }
+
+    @Override
+    public Object getItem(int position) {
+        return dataSource.get(position);
+    }
+
+    @Override
+    public long getItemId(int position) {
+        return position;
+    }
+
+    @Override
+    public View getView(int position, View convertView, ViewGroup parent) {
+        ViewHolder holder;
         if (convertView == null) {
-            convertView = inflater.inflate(R.layout.list_item_user, null);
+            convertView = inflater.inflate(R.layout.list_item_dialog_user, null);
             holder = new ViewHolder();
             holder.login = (TextView) convertView.findViewById(R.id.userLogin);
-            holder.imgView_avatar = (ImageView) convertView.findViewById(R.id.imageView);
             convertView.setTag(holder);
         } else {
             holder = (ViewHolder) convertView.getTag();
         }
-//        Bitmap bm = BitmapFactory.decodeResource(getResources(),R.drawable.image);
-//        RoundImage roundedImage = new RoundImage(bm);
-//        imageView1.setImageDrawable(roundedImage);
-        
-		return convertView;
-	}
-	
-	private static class ViewHolder {
-        TextView login;
-        ImageView imgView_avatar;
+        VUser user = dataSource.get(position);
+        if (user != null) {
+            holder.login.setText(app.getUserNameById(user.getId()));
+        } else {
+        	holder.login.setText("");
+        }
+        return convertView;
     }
 
+    private static class ViewHolder {
+        TextView login;
+    }
 }

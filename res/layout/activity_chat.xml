@@ -42,22 +42,7 @@
             android:layout_above="@+id/chatAddButton"
             android:layout_alignParentRight="true"
             android:text="users" />
-		
-        <com.example.vconference.ui.view.OwnSurfaceView
-            android:id="@+id/cameraView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="5dp" />
 
-        <com.example.vconference.ui.view.OpponentSurfaceView
-            android:id="@+id/opponentView"
-            android:layout_width="200dp"
-            android:layout_height="220dp"
-            android:layout_below="@+id/cameraView"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="5dp" />
-        
         <ListView
             android:id="@+id/messagesContainer"
             android:layout_width="match_parent"
@@ -88,6 +73,21 @@
             android:layout_alignParentRight="true"
             android:text="Friend"
             android:textSize="20dp" />
+
+        <com.example.vconference.ui.view.OwnSurfaceView
+            android:id="@+id/cameraView"
+            android:layout_width="220dp"
+            android:layout_height="200dp"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="5dp" />
+
+        <com.example.vconference.ui.view.OpponentSurfaceView
+            android:id="@+id/opponentView"
+            android:layout_width="200dp"
+            android:layout_height="220dp"
+            android:layout_below="@+id/cameraView"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="5dp" />
 
         <ProgressBar
             android:id="@+id/progressBar"

@@ -1,6 +1,5 @@
 package com.example.vconference.ui.core;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -25,7 +24,6 @@ import com.quickblox.chat.model.QBChatMessage;
 import com.quickblox.chat.model.QBDialog;
 import com.quickblox.core.QBEntityCallback;
 import com.quickblox.core.QBEntityCallbackImpl;
-import com.quickblox.core.exception.QBResponseException;
 import com.quickblox.core.request.QBRequestUpdateBuilder;
 
 public class GroupChatManagerImpl extends QBMessageListenerImpl<QBGroupChat> implements ChatManager {
@@ -118,8 +116,6 @@ public class GroupChatManagerImpl extends QBMessageListenerImpl<QBGroupChat> imp
                     @Override
                     public void run() {
                         callback.onSuccess();
-
-                        Toast.makeText(chatActivity, "Join successful", Toast.LENGTH_LONG).show();
                     }
                 });
                 Log.w("Chat", "Join successful");

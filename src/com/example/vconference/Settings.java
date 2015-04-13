@@ -40,16 +40,19 @@ public class Settings implements Serializable {
 	private static String settingFile;
 
 	private boolean signInAutomatically;
-	private String email;
+	private String login;
 	private String password;
 
+	public int lastTab;
 	
-	public String getEmail() {
-		return email;
+	public boolean contactShowUsers;
+	
+	public String getLogin() {
+		return login;
 	}
 
 	public void setEmail(String email) {
-		this.email = email;
+		this.login = email;
 	}
 
 	public String getPassword() {
@@ -60,13 +63,13 @@ public class Settings implements Serializable {
 		return signInAutomatically;
 	}
 
-	public void setSignInAutomatically(boolean signInAutomatically, String email, String password) {
+	public void setSignInAutomatically(boolean signInAutomatically, String login, String password) {
 		this.signInAutomatically = signInAutomatically;
 		if (!signInAutomatically) {
-			this.email = null;
+			this.login = login;
 			this.password = null;
 		} else {
-			this.email = email;
+			this.login = login;
 			this.password = encrypt(password);
 		}
 	}

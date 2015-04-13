@@ -48,17 +48,17 @@
             android:layout_marginBottom="10dp"
             android:text="@string/sign_in_automatically"
             android:textColor="#808080" />
-	
-        <TextView 
+
+        <TextView
             android:id="@+id/textView_connection"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
-            android:text="@string/the_internet_is_disconnected"
             android:layout_marginBottom="5dp"
+            android:text="@string/the_internet_is_disconnected"
             android:textColor="#ff0000"
-            android:visibility="gone"/>
-        
+            android:visibility="gone" />
+
         <Button
             android:id="@+id/btn_signIn"
             android:layout_width="match_parent"
@@ -80,5 +80,13 @@
             android:textColor="#ffffff"
             android:textSize="15sp" />
     </LinearLayout>
+
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleLarge"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true" />
 
 </RelativeLayout>

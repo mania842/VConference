@@ -71,7 +71,7 @@ public class NewDialogActivity extends ActionBarActivity {
 
 	@Override
 	public void onBackPressed() {
-		Intent i = new Intent(NewDialogActivity.this, ChatRoomActivity.class);
+		Intent i = new Intent(NewDialogActivity.this, FragmentChatRoom.class);
 		startActivity(i);
 		finish();
 

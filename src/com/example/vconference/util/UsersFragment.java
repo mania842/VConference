@@ -15,6 +15,7 @@ import android.widget.ProgressBar;
 
 import com.example.vconference.R;
 import com.example.vconference.VApp;
+import com.example.vconference.custom.objects.VUser;
 import com.example.vconference.ui.ChatActivity;
 import com.example.vconference.ui.adapter.UsersAdapter;
 import com.handmark.pulltorefresh.library.PullToRefreshBase;
@@ -39,7 +40,7 @@ public class UsersFragment extends Fragment implements QBEntityCallback<ArrayLis
 	private UsersAdapter usersAdapter;
 
 	private int currentPage = 0;
-	private List<QBUser> users = new ArrayList<QBUser>();
+	private List<VUser> users = new ArrayList<VUser>();
 
 	public static UsersFragment getInstance() {
 		return new UsersFragment();
@@ -115,7 +116,13 @@ public class UsersFragment extends Fragment implements QBEntityCallback<ArrayLis
 
 		// save users
 		//
-		users.addAll(newUsers);
+		ArrayList<VUser> vUsers = new ArrayList<VUser>();
+		for (QBUser user : newUsers) {
+			VUser vuser = new VUser(user);
+//			vUsers.add((VUser) user);
+			vUsers.add(vuser);
+		}
+		users.addAll(vUsers);
 
 		// Prepare users list for simple adapter.
 		//
@@ -169,7 +176,7 @@ public class UsersFragment extends Fragment implements QBEntityCallback<ArrayLis
 		QBUsers.getUsers(getQBPagedRequestBuilder(currentPage), UsersFragment.this);
 	}
 
-	public static ArrayList<Integer> getUserIds(List<QBUser> users) {
+	public static ArrayList<Integer> getUserIds(List<VUser> users) {
 		ArrayList<Integer> ids = new ArrayList<Integer>();
 		for (QBUser user : users) {
 			ids.add(user.getId());

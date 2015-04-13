@@ -4,32 +4,34 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 
-import com.example.vconference.ui.ChatRoomActivity;
-import com.example.vconference.ui.sample.Android;
-import com.example.vconference.ui.sample.Windows;
+import com.example.vconference.ui.FragmentChatRoom;
+import com.example.vconference.ui.FragmentContactList;
+import com.example.vconference.ui.FragmentSettings;
 
 public class TabPagerAdapter extends FragmentPagerAdapter {
-
+	private FragmentContactList contactList;
+	private FragmentChatRoom chatroom;
+	private FragmentSettings settings;
+	
 	public TabPagerAdapter(FragmentManager fm) {
 		super(fm);
-		// TODO Auto-generated constructor stub
+		contactList = new FragmentContactList();
+		chatroom = new FragmentChatRoom();
+		settings = new FragmentSettings();
 	}
 
 	@Override
 	public Fragment getItem(int i) {
 		switch (i) {
 		case 0:
-			System.err.println("create new Android");
 			// Fragement for Android Tab
-			return new Android();
+			return contactList;
 		case 1:
-			System.err.println("create new ios");
 			// Fragment for Ios Tab
-			return new ChatRoomActivity();
+			return chatroom;
 		case 2:
-			System.err.println("create new Windows");
 			// Fragment for Windows Tab
-			return new Windows();
+			return settings;
 		}
 		return null;
 	}

@@ -12,23 +12,23 @@ import android.widget.CheckBox;
 import android.widget.TextView;
 
 import com.example.vconference.R;
-import com.quickblox.users.model.QBUser;
+import com.example.vconference.custom.objects.VUser;
 
 /**
  * Created by igorkhomenko on 9/12/14.
  */
 public class UsersAdapter extends BaseAdapter {
 
-    private List<QBUser> dataSource;
+    private List<VUser> dataSource;
     private LayoutInflater inflater;
-    private List<QBUser> selected = new ArrayList<QBUser>();
+    private List<VUser> selected = new ArrayList<VUser>();
 
-    public UsersAdapter(List<QBUser> dataSource, Context ctx) {
+    public UsersAdapter(List<VUser> dataSource, Context ctx) {
         this.dataSource = dataSource;
         this.inflater = LayoutInflater.from(ctx);
     }
 
-    public List<QBUser> getSelected() {
+    public List<VUser> getSelected() {
         return selected;
     }
 
@@ -59,7 +59,7 @@ public class UsersAdapter extends BaseAdapter {
         } else {
             holder = (ViewHolder) convertView.getTag();
         }
-        final QBUser user = dataSource.get(position);
+        final VUser user = dataSource.get(position);
         if (user != null) {
             holder.login.setText(user.getLogin());
             holder.add.setOnClickListener(new View.OnClickListener() {

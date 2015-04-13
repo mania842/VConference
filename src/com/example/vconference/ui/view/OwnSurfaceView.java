@@ -1,6 +1,5 @@
 package com.example.vconference.ui.view;
 
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.List;
@@ -25,304 +24,302 @@ import android.view.SurfaceView;
  */
 public class OwnSurfaceView extends SurfaceView implements SurfaceHolder.Callback {
 
-    private volatile Camera camera;
+	private volatile Camera camera;
 
-    private ProcessDataThread processCameraDataThread;
-    private ConcurrentLinkedQueue<Runnable> cameraPreviewCallbackQueue;
-    private int currentCameraId;
+	private ProcessDataThread processCameraDataThread;
+	private ConcurrentLinkedQueue<Runnable> cameraPreviewCallbackQueue;
+	private int currentCameraId;
 
-    private final int IMAGE_QUALITY = 100;
-    private int FPS = 100; // by default 4 fps
-    private Camera.Size frameSize;
+	private final int IMAGE_QUALITY = 100;
+	private int FPS = 100; // by default 4 fps
+	private Camera.Size frameSize;
 
-    private Matrix rotationMatrixFront;
-    private Matrix rotationMatrixBack;
+	private Matrix rotationMatrixFront;
+	private Matrix rotationMatrixBack;
 
-    private CameraDataListener cameraDataListener;
+	private CameraDataListener cameraDataListener;
 
-    private boolean isCreated = false;
-    private boolean noCamera = false;
+	private boolean isCreated = false;
+	private boolean noCamera = false;
 
-    public OwnSurfaceView(Context ctx, AttributeSet attrSet) {
-        super(ctx, attrSet);
+	public OwnSurfaceView(Context ctx, AttributeSet attrSet) {
+		super(ctx, attrSet);
 
-        getHolder().addCallback(this);
-        getHolder().setFormat(PixelFormat.TRANSLUCENT);
-        getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
-//        int numCameras = Camera.getNumberOfCameras() == 0 ? 1 : Camera.getNumberOfCameras();
-        if (Camera.getNumberOfCameras() == 0) {
-        	noCamera = true;
-        } else {
-        	noCamera = false;
-        	currentCameraId = (currentCameraId + 1) % Camera.getNumberOfCameras();
-        }
+		getHolder().addCallback(this);
+		getHolder().setFormat(PixelFormat.TRANSLUCENT);
+		getHolder().setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+		// int numCameras = Camera.getNumberOfCameras() == 0 ? 1 : Camera.getNumberOfCameras();
+		if (Camera.getNumberOfCameras() == 0) {
+			noCamera = true;
+		} else {
+			noCamera = false;
+			currentCameraId = (currentCameraId + 1) % Camera.getNumberOfCameras();
+		}
 
-        rotationMatrixFront = new Matrix();
-        rotationMatrixFront.postRotate(-90);
-        rotationMatrixBack = new Matrix();
-        rotationMatrixBack.postRotate(90);
+		rotationMatrixFront = new Matrix();
+		rotationMatrixFront.postRotate(-90);
+		rotationMatrixBack = new Matrix();
+		rotationMatrixBack.postRotate(90);
 
-        cameraPreviewCallbackQueue = new ConcurrentLinkedQueue<Runnable>();
-    }
+		cameraPreviewCallbackQueue = new ConcurrentLinkedQueue<Runnable>();
+	}
 
-    public void setCameraDataListener(CameraDataListener cameraDataListener) {
-        this.cameraDataListener = cameraDataListener;
-    }
+	public void setCameraDataListener(CameraDataListener cameraDataListener) {
+		this.cameraDataListener = cameraDataListener;
+	}
 
-    public void setFPS(int FPS) {
-        this.FPS = FPS;
-    }
+	public void setFPS(int FPS) {
+		this.FPS = FPS;
+	}
 
-    public void setFrameSize(Camera.Size frameSize) {
-        this.frameSize = frameSize;
-    }
+	public void setFrameSize(Camera.Size frameSize) {
+		this.frameSize = frameSize;
+	}
 
+	@Override
+	public void surfaceDestroyed(SurfaceHolder holder) {
+		isCreated = false;
 
-    @Override
-    public void surfaceDestroyed(SurfaceHolder holder) {
-        isCreated = false;
+		Log.w("MySurfaceView", "surfaceDestroyed");
 
-        Log.w("MySurfaceView", "surfaceDestroyed");
+		boolean retry = true;
+		// close thread
+		processCameraDataThread.stopProcessing();
+		while (retry) {
+			try {
+				processCameraDataThread.join();
+				retry = false;
+			} catch (InterruptedException e) {
+				// try again
+			}
+		}
+	}
 
-        boolean retry = true;
-        // close thread
-        processCameraDataThread.stopProcessing();
-        while (retry) {
-            try {
-                processCameraDataThread.join();
-                retry = false;
-            } catch (InterruptedException e) {
-                // try again
-            }
-        }
-    }
+	@Override
+	public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
+		Log.w("MySurfaceView", "surfaceChanged");
+	}
 
-    @Override
-    public void surfaceChanged(SurfaceHolder holder, int format, int w, int h) {
-        Log.w("MySurfaceView", "surfaceChanged");
-    }
+	@Override
+	public void surfaceCreated(SurfaceHolder holder) {
+		isCreated = true;
 
-    @Override
-    public void surfaceCreated(SurfaceHolder holder) {
-        isCreated = true;
+		Log.w("MySurfaceView", "surfaceCreated");
 
-        Log.w("MySurfaceView", "surfaceCreated");
+		openCamera();
 
-        openCamera();
+		processCameraDataThread = new ProcessDataThread();
+		processCameraDataThread.start();
+	}
 
-        processCameraDataThread = new ProcessDataThread();
-        processCameraDataThread.start();
-    }
+	Camera.PreviewCallback cameraPreviewCallback = new Camera.PreviewCallback() {
+		@Override
+		public void onPreviewFrame(byte[] data, Camera camera) {
 
+			Camera.Parameters params = camera.getParameters();
+			processCameraData(data, params.getPreviewSize().width, params.getPreviewSize().height);
+		}
+	};
 
-    Camera.PreviewCallback cameraPreviewCallback = new Camera.PreviewCallback() {
-        @Override
-        public void onPreviewFrame(byte[] data, Camera camera) {
+	public void openCamera() {
+		if (!isCreated || camera != null || noCamera) {
+			return;
+		}
 
-            Camera.Parameters params = camera.getParameters();
-            processCameraData(data, params.getPreviewSize().width, params.getPreviewSize().height);
-        }
-    };
+		// Open camera
+		//
+		try {
+			camera = Camera.open(currentCameraId);
+		} catch (NoSuchMethodError noSuchMethodError) {
+			camera = Camera.open();
+		} catch (RuntimeException e) {
+			noCamera = true;
+			return;
+		}
 
+		try {
+			camera.setPreviewDisplay(getHolder());
+			camera.setDisplayOrientation(90);
+			camera.setPreviewCallback(cameraPreviewCallback);
+		} catch (IOException ignore) {
+			ignore.printStackTrace();
+		} catch (NullPointerException ignore) {
+			ignore.printStackTrace();
+		}
 
-    public void openCamera() {
-        if(!isCreated || camera != null || noCamera){
-            return;
-        }
+		// get camera parameters
+		//
+		final Camera.Parameters parameters = camera.getParameters();
 
-        // Open camera
-        //
-        try {
-            camera = Camera.open(currentCameraId);
-        } catch (NoSuchMethodError noSuchMethodError) {
-            camera = Camera.open();
-        }
+		// Get Preview Size and FPS
+		//
+		final List<Camera.Size> supportedPreviewSizes = parameters.getSupportedPreviewSizes();
+		final List<int[]> supportedPreviewFpsRange = parameters.getSupportedPreviewFpsRange();
 
-        try {
-            camera.setPreviewDisplay(getHolder());
-            camera.setDisplayOrientation(90);
-            camera.setPreviewCallback(cameraPreviewCallback);
-        } catch (IOException ignore) {
-            ignore.printStackTrace();
-        } catch (NullPointerException ignore) {
-            ignore.printStackTrace();
-        }
+		// set FPS
+		//
+		int[] chosenFPSRange = supportedPreviewFpsRange.get(0);
+		for (int[] FPSRange : supportedPreviewFpsRange) {
+			if (FPS > FPSRange[Camera.Parameters.PREVIEW_FPS_MIN_INDEX] && FPS < FPSRange[Camera.Parameters.PREVIEW_FPS_MAX_INDEX]) {
+				chosenFPSRange = FPSRange;
+				break;
+			}
+		}
+		parameters.setPreviewFpsRange(chosenFPSRange[Camera.Parameters.PREVIEW_FPS_MIN_INDEX], chosenFPSRange[Camera.Parameters.PREVIEW_FPS_MAX_INDEX]);
 
+		// set Preview Size
+		//
+		if (frameSize != null) {
+			parameters.setPreviewSize(frameSize.width, frameSize.height);
+		} else {
+			int firstElementWidth = supportedPreviewSizes.get(0).width;
+			int lastElementWidth = supportedPreviewSizes.get(supportedPreviewSizes.size() - 1).width;
+			Camera.Size minPreviewSize = (lastElementWidth > firstElementWidth) ? supportedPreviewSizes.get(0) : supportedPreviewSizes
+					.get(supportedPreviewSizes.size() - 1);
+			parameters.setPreviewSize(minPreviewSize.width, minPreviewSize.height);
+		}
 
-        // get camera parameters
-        //
-        final Camera.Parameters parameters = camera.getParameters();
+		// Set parameters and start preview
+		//
+		try {
+			camera.setParameters(parameters);
+			camera.startPreview();
+		} catch (RuntimeException ignore) {
+			ignore.printStackTrace();
+		}
+	}
 
-        // Get Preview Size and FPS
-        //
-        final List<Camera.Size> supportedPreviewSizes = parameters.getSupportedPreviewSizes();
-        final List<int[]> supportedPreviewFpsRange = parameters.getSupportedPreviewFpsRange();
+	public void switchCamera() {
+		if (Camera.getNumberOfCameras() == 2) {
+			currentCameraId = (currentCameraId + 1) % Camera.getNumberOfCameras();
 
+			closeCamera();
+			openCamera();
+		}
+	}
 
-        // set FPS
-        //
-        int[] chosenFPSRange = supportedPreviewFpsRange.get(0);
-        for (int[] FPSRange : supportedPreviewFpsRange) {
-            if (FPS > FPSRange[Camera.Parameters.PREVIEW_FPS_MIN_INDEX] && FPS < FPSRange[Camera.Parameters.PREVIEW_FPS_MAX_INDEX]) {
-                chosenFPSRange = FPSRange;
-                break;
-            }
-        }
-        parameters.setPreviewFpsRange(chosenFPSRange[Camera.Parameters.PREVIEW_FPS_MIN_INDEX],
-                chosenFPSRange[Camera.Parameters.PREVIEW_FPS_MAX_INDEX]);
+	public void closeCamera() {
+		if (camera == null) {
+			return;
+		}
+		camera.setPreviewCallback(null);
+		camera.stopPreview();
+		camera.release();
+		camera = null;
+	}
 
+	public void reuseCamera() {
+		closeCamera();
+		openCamera();
+	}
 
-        // set Preview Size
-        //
-        if (frameSize != null) {
-            parameters.setPreviewSize(frameSize.width, frameSize.height);
-        } else {
-            int firstElementWidth = supportedPreviewSizes.get(0).width;
-            int lastElementWidth = supportedPreviewSizes.get(supportedPreviewSizes.size() - 1).width;
-            Camera.Size minPreviewSize = (lastElementWidth > firstElementWidth) ? supportedPreviewSizes.get(0) : supportedPreviewSizes.get(supportedPreviewSizes.size() - 1);
-            parameters.setPreviewSize(minPreviewSize.width, minPreviewSize.height);
-        }
-        
+	private void processCameraData(final byte[] cameraData, final int imageWidth, final int imageHeight) {
 
-        // Set parameters and start preview
-        //
-        try {
-            camera.setParameters(parameters);
-            camera.startPreview();
-        } catch (RuntimeException ignore) {
-            ignore.printStackTrace();
-        }
-    }
+		cameraPreviewCallbackQueue.clear();
+		boolean offerSuccess = cameraPreviewCallbackQueue.offer(new Runnable() {
+			@Override
+			public void run() {
+				if (cameraDataListener != null) {
+					long start = System.nanoTime();
 
-    public void switchCamera() {
-        if (Camera.getNumberOfCameras() == 2) {
-            currentCameraId = (currentCameraId + 1) % Camera.getNumberOfCameras();
+					// Convert data to JPEG and compress
+					YuvImage image = new YuvImage(cameraData, ImageFormat.NV21, imageWidth, imageHeight, null);
+					ByteArrayOutputStream out = new ByteArrayOutputStream();
+					Rect area = new Rect(0, 0, imageWidth, imageHeight);
+					image.compressToJpeg(area, IMAGE_QUALITY, out);
+					byte[] jpegVideoFrameData = out.toByteArray();
 
-            closeCamera();
-            openCamera();
-        }
-    }
+					// rotate image
+					byte[] rotatedCameraData = rotateImage(jpegVideoFrameData, imageWidth, imageHeight, currentCameraId);
+					if (rotatedCameraData.length == 0) {
+						return;
+					}
 
-    public void closeCamera() {
-        if (camera == null) {
-            return;
-        }
-        camera.setPreviewCallback(null);
-        camera.stopPreview();
-        camera.release();
-        camera = null;
-    }
+					// send data to the opponent
+					//
+					cameraDataListener.onCameraDataReceive(rotatedCameraData);
+					//
+					//
 
-    public void reuseCamera() {
-        closeCamera();
-        openCamera();
-    }
+					// close stream
+					try {
+						out.close();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
+		});
+	}
 
-    private void processCameraData(final byte[] cameraData, final int imageWidth, final int imageHeight) {
+	private byte[] rotateImage(byte[] cameraData, final int imageWidth, final int imageHeight, int currentCameraId) {
+		Bitmap landscapeCameraDataBitmap = BitmapFactory.decodeByteArray(cameraData, 0, cameraData.length);
 
-        cameraPreviewCallbackQueue.clear();
-        boolean offerSuccess = cameraPreviewCallbackQueue.offer(new Runnable() {
-            @Override
-            public void run() {
-                long start = System.nanoTime();
+		Bitmap portraitBitmap = null;
+		if (currentCameraId == getCameraId(Camera.CameraInfo.CAMERA_FACING_FRONT)) { // front camera
+			portraitBitmap = Bitmap.createBitmap(landscapeCameraDataBitmap, 0, 0, imageWidth, imageHeight, rotationMatrixFront, true);
+		} else { // back camera
+			portraitBitmap = Bitmap.createBitmap(landscapeCameraDataBitmap, 0, 0, imageWidth, imageHeight, rotationMatrixBack, true);
+		}
 
-                // Convert data to JPEG and compress
-                YuvImage image = new YuvImage(cameraData, ImageFormat.NV21, imageWidth, imageHeight, null);
-                ByteArrayOutputStream out = new ByteArrayOutputStream();
-                Rect area = new Rect(0, 0, imageWidth, imageHeight);
-                image.compressToJpeg(area, IMAGE_QUALITY, out);
-                byte[] jpegVideoFrameData = out.toByteArray();
+		landscapeCameraDataBitmap.recycle();
+		ByteArrayOutputStream stream = new ByteArrayOutputStream();
+		if (!portraitBitmap.isRecycled()) {
+			portraitBitmap.compress(Bitmap.CompressFormat.JPEG, IMAGE_QUALITY, stream);
+			byte[] portraitCameraData = stream.toByteArray();
+			portraitBitmap.recycle();
+			return portraitCameraData;
+		} else {
+			return new byte[0];
+		}
+	}
 
-                // rotate image
-                byte[] rotatedCameraData = rotateImage(jpegVideoFrameData, imageWidth, imageHeight, currentCameraId);
-                if (rotatedCameraData.length == 0) {
-                    return;
-                }
+	private int getCameraId(final int facing) {
+		int numberOfCameras = Camera.getNumberOfCameras();
+		Camera.CameraInfo info = new Camera.CameraInfo();
+		for (int id = 0; id < numberOfCameras; id++) {
+			Camera.getCameraInfo(id, info);
+			if (info.facing == facing) {
+				return id;
+			}
+		}
+		return -1;
+	}
 
-                // send data to the opponent
-                //
-                cameraDataListener.onCameraDataReceive(rotatedCameraData);
-                //
-                //
+	private class ProcessDataThread extends Thread {
 
-                // close stream
-                try {
-                    out.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-    }
+		private boolean isRunning;
 
-    private byte[] rotateImage(byte[] cameraData, final int imageWidth, final int imageHeight, int currentCameraId) {
-        Bitmap landscapeCameraDataBitmap = BitmapFactory.decodeByteArray(cameraData, 0, cameraData.length);
+		public ProcessDataThread() {
+			this.isRunning = true;
+		}
 
-        Bitmap portraitBitmap = null;
-        if(currentCameraId == getCameraId(Camera.CameraInfo.CAMERA_FACING_FRONT)) { // front camera
-            portraitBitmap = Bitmap.createBitmap(landscapeCameraDataBitmap, 0, 0, imageWidth, imageHeight, rotationMatrixFront, true);
-        }else{ // back camera
-            portraitBitmap = Bitmap.createBitmap(landscapeCameraDataBitmap, 0, 0, imageWidth, imageHeight, rotationMatrixBack, true);
-        }
+		@Override
+		public void run() {
+			while (isRunning) {
+				if (!cameraPreviewCallbackQueue.isEmpty()) {
 
-        landscapeCameraDataBitmap.recycle();
-        ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        if (!portraitBitmap.isRecycled()) {
-            portraitBitmap.compress(Bitmap.CompressFormat.JPEG, IMAGE_QUALITY, stream);
-            byte[] portraitCameraData = stream.toByteArray();
-            portraitBitmap.recycle();
-            return portraitCameraData;
-        } else {
-            return new byte[0];
-        }
-    }
+					Runnable runnable = cameraPreviewCallbackQueue.poll();
+					if (runnable != null) {
+						runnable.run();
+					}
 
-    private int getCameraId(final int facing) {
-        int numberOfCameras = Camera.getNumberOfCameras();
-        Camera.CameraInfo info = new Camera.CameraInfo();
-        for (int id = 0; id < numberOfCameras; id++) {
-            Camera.getCameraInfo(id, info);
-            if (info.facing == facing) {
-                return id;
-            }
-        }
-        return -1;
-    }
+					try {
+						Thread.sleep(1000 / FPS);
+					} catch (InterruptedException e) {
+						closeCamera();
+						e.printStackTrace();
+					}
+				}
+			}
+		}
 
+		public void stopProcessing() {
+			this.isRunning = false;
+		}
+	}
 
-    private class ProcessDataThread extends Thread {
-
-        private boolean isRunning;
-
-        public ProcessDataThread() {
-            this.isRunning = true;
-        }
-
-        @Override
-        public void run() {
-            while (isRunning) {
-                if (!cameraPreviewCallbackQueue.isEmpty()) {
-
-                    Runnable runnable = cameraPreviewCallbackQueue.poll();
-                    if (runnable != null) {
-                        runnable.run();
-                    }
-
-                    try {
-                        Thread.sleep(1000 / FPS);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }
-        }
-
-        public void stopProcessing() {
-            this.isRunning = false;
-        }
-    }
-
-    public interface CameraDataListener{
-        public void onCameraDataReceive(byte[] data);
-    }
+	public interface CameraDataListener {
+		public void onCameraDataReceive(byte[] data);
+	}
 }

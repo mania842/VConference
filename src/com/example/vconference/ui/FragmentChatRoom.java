@@ -5,15 +5,11 @@ import java.util.List;
 
 import android.app.AlertDialog;
 import android.content.ContentResolver;
-import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.ContactsContract;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -22,6 +18,7 @@ import android.widget.ProgressBar;
 
 import com.example.vconference.R;
 import com.example.vconference.VApp;
+import com.example.vconference.custom.objects.VUser;
 import com.example.vconference.ui.adapter.ChatRoomAdapter;
 import com.quickblox.chat.QBChatService;
 import com.quickblox.chat.model.QBDialog;
@@ -32,7 +29,7 @@ import com.quickblox.core.request.QBRequestGetBuilder;
 import com.quickblox.users.QBUsers;
 import com.quickblox.users.model.QBUser;
 
-public class ChatRoomActivity extends Fragment {
+public class FragmentChatRoom extends Fragment {
 	private ListView dialogsListView;
 	private ProgressBar progressBar;
 
@@ -40,7 +37,6 @@ public class ChatRoomActivity extends Fragment {
 	public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		View chatroomView = inflater.inflate(R.layout.activity_dialog, container, false);
-		getContactList();
 		dialogsListView = (ListView) chatroomView.findViewById(R.id.roomsList);
 		progressBar = (ProgressBar) chatroomView.findViewById(R.id.progressBar);
 
@@ -78,7 +74,11 @@ public class ChatRoomActivity extends Fragment {
 
 						// Save users
 						//
-						((VApp) getActivity().getApplication()).setDialogsUsers(users);
+						ArrayList<VUser> vUsers = new ArrayList<VUser>();
+						for (QBUser user : users) {
+							vUsers.add(new VUser(user));
+						}
+						((VApp) getActivity().getApplication()).setDialogsUsers(vUsers);
 
 						// build list view
 						//
@@ -162,25 +162,4 @@ public class ChatRoomActivity extends Fragment {
 //		return super.onOptionsItemSelected(item);
 //	}
 	
-	private void getContactList() {
-		ContentResolver cr = getActivity().getContentResolver();
-		Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
-		if (cur.getCount() > 0) {
-			while (cur.moveToNext()) {
-				String id = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID));
-				String name = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
-				if (Integer.parseInt(cur.getString(cur.getColumnIndex(ContactsContract.Contacts.HAS_PHONE_NUMBER))) > 0) {
-					Cursor pCur = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
-							ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?", new String[] { id }, null);
-					while (pCur.moveToNext()) {
-						String phoneNo = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));
-//						System.out.println(name + " : " + phoneNo);
-						
-						// Toast.makeText(NativeContentProvider.this, "Name: " + name + ", Phone No: " + phoneNo, Toast.LENGTH_SHORT).show();
-					}
-					pCur.close();
-				}
-			}
-		}
-	}
 }

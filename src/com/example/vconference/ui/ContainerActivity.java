@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.ImageView;
 
 import com.example.vconference.R;
+import com.example.vconference.Settings;
 import com.example.vconference.ui.adapter.TabPagerAdapter;
 
 @SuppressLint("InflateParams")
@@ -17,19 +18,22 @@ public class ContainerActivity extends FragmentActivity {
 	ViewPager tabViewPager;
 	TabPagerAdapter tabAdapter;
 	ActionBar actionBar;
+	Settings settings;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		settings = Settings.getInstance();
 		tabAdapter = new TabPagerAdapter(getSupportFragmentManager());
 		tabViewPager = (ViewPager) findViewById(R.id.pager);
 		tabViewPager.setOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
 			@Override
 			public void onPageSelected(int position) {
 				actionBar = getActionBar();
-				System.out.println("page selected: " + position);
 				actionBar.setSelectedNavigationItem(position);
+				settings.lastTab = position;
+				settings.saveSettings();
 			}
 		});
 		tabViewPager.setAdapter(tabAdapter);
@@ -68,11 +72,22 @@ public class ContainerActivity extends FragmentActivity {
 		ImageView title3 = (ImageView)tabView3.findViewById(R.id.tabIcon);
 		title3.setImageResource(R.drawable.ic_settings);
 		
+		
 //		actionBar.addTab(actionBar.newTab().setText("Android").setTabListener(tabListener));
+//		actionBar.addTab(actionBar.newTab().setText("ios").setTabListener(tabListener));
+//		actionBar.addTab(actionBar.newTab().setText("windows").setTabListener(tabListener));
+//		actionBar.addTab(actionBar.newTab().setIcon(R.drawable.ic_user).setTabListener(tabListener));
+//		actionBar.addTab(actionBar.newTab().setIcon(R.drawable.ic_chat).setTabListener(tabListener));
+//		actionBar.addTab(actionBar.newTab().setIcon(R.drawable.ic_settings).setTabListener(tabListener));
+		
 		actionBar.addTab(actionBar.newTab().setCustomView(tabView1).setTabListener(tabListener));
 		actionBar.addTab(actionBar.newTab().setCustomView(tabView2).setTabListener(tabListener));
 		actionBar.addTab(actionBar.newTab().setCustomView(tabView3).setTabListener(tabListener));
 		
-		tabViewPager.setCurrentItem(1);
+		tabView1.getLayoutParams().width = 100;
+		tabView2.getLayoutParams().width = 100;
+		tabView3.getLayoutParams().width = 100;
+		
+		tabViewPager.setCurrentItem(settings.lastTab);
 	}
 }

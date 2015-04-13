@@ -11,9 +11,13 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -25,16 +29,17 @@ import android.widget.Toast;
 
 import com.example.vconference.R;
 import com.example.vconference.VApp;
+import com.example.vconference.custom.objects.VUser;
 import com.example.vconference.ui.adapter.ChatAdapter;
+import com.example.vconference.ui.adapter.ContactListAdapter;
 import com.example.vconference.ui.core.ChatManager;
 import com.example.vconference.ui.core.GroupChatManagerImpl;
 import com.example.vconference.ui.core.PrivateChatManagerImpl;
 import com.example.vconference.ui.view.OpponentSurfaceView;
 import com.example.vconference.ui.view.OwnSurfaceView;
+import com.navdrawer.SimpleSideDrawer;
 import com.quickblox.chat.QBChatService;
 import com.quickblox.chat.QBPrivateChat;
-import com.quickblox.chat.exception.QBChatException;
-import com.quickblox.chat.listeners.QBMessageListener;
 import com.quickblox.chat.model.QBChatMessage;
 import com.quickblox.chat.model.QBDialog;
 import com.quickblox.core.QBEntityCallbackImpl;
@@ -72,6 +77,10 @@ public class ChatActivity extends Activity {
 	private OwnSurfaceView myView;
 	private VideoChatConfig videoChatConfig;
 
+	private SimpleSideDrawer slide_me;
+	private ListView contactList;
+	private ContactListAdapter adapterContact;
+	
 	public static void start(Context context, Bundle bundle) {
 		Intent intent = new Intent(context, ChatActivity.class);
 		intent.putExtras(bundle);
@@ -80,23 +89,37 @@ public class ChatActivity extends Activity {
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_chat);
 		initViews();
-
 		initVideoCalls();
+		
+		initRightMenuView();
+		
+	}
+	
+	private void initRightMenuView() {
+		slide_me = new SimpleSideDrawer(this);
+		slide_me.setRightBehindContentView(R.layout.right_menu);
+		contactList = (ListView) slide_me.findViewById(R.id.contactList);
+		ArrayList<VUser> vUsers = ((VApp) getApplication()).getVUsers(dialog.getOccupants());
+		adapterContact = new ContactListAdapter(vUsers, this);
+		contactList.setAdapter(adapterContact);
 	}
 
 	public void initVideoCalls() {
+		opponentView = (OpponentSurfaceView) findViewById(R.id.opponentView);
+		myView = (OwnSurfaceView) findViewById(R.id.cameraView);
+		
+		opponentView.setVisibility(View.GONE);
+		myView.setVisibility(View.GONE);
 		// VideoChat settings
 		videoChatConfig = getIntent().getParcelableExtra(VideoChatConfig.class.getCanonicalName());
-
+		
 		QBUser opponentUser = new QBUser(2758477);
 
 		videoChatConfig = QBVideoChatController.getInstance().callFriend(opponentUser, CallType.VIDEO_AUDIO, null);
-		opponentView = (OpponentSurfaceView) findViewById(R.id.opponentView);
-		myView = (OwnSurfaceView) findViewById(R.id.cameraView);
+		
 		myView.setCameraDataListener(new OwnSurfaceView.CameraDataListener() {
 			@Override
 			public void onCameraDataReceive(byte[] data) {
@@ -122,8 +145,10 @@ public class ChatActivity extends Activity {
 	public void onBackPressed() {
 		try {
 			chat.release();
-			myView.closeCamera();
-			QBVideoChatController.getInstance().finishVideoChat(videoChatConfig);
+			if (myView != null)
+				myView.closeCamera();
+			if (videoChatConfig != null)
+				QBVideoChatController.getInstance().finishVideoChat(videoChatConfig);
 		} catch (XMPPException e) {
 			Log.e(TAG, "failed to release chat", e);
 		}
@@ -225,7 +250,6 @@ public class ChatActivity extends Activity {
 		addButton.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-
 				((GroupChatManagerImpl) chat).inviteUser(dialog, 2759018, new QBEntityCallbackImpl() {
 					@Override
 					public void onSuccess() {
@@ -401,4 +425,33 @@ public class ChatActivity extends Activity {
 		PRIVATE, GROUP, PUBLIC_GROUP
 	}
 
+	@Override
+	public void onConfigurationChanged(Configuration newConfig) {
+		super.onConfigurationChanged(newConfig);
+		
+		System.err.println("orientation changed");
+//		if (newConfig.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+//	        Toast.makeText(this, "landscape", Toast.LENGTH_SHORT).show();
+//	    } else if (newConfig.orientation == Configuration.ORIENTATION_PORTRAIT){
+//	        Toast.makeText(this, "portrait", Toast.LENGTH_SHORT).show();
+//	    }
+
+	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.rooms, menu);
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		int id = item.getItemId();
+		if (id == R.id.menu_more) {
+			slide_me.toggleRightDrawer();
+			return true;
+		}
+		return super.onOptionsItemSelected(item);
+	}
 }

@@ -15,54 +15,71 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.Menu;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.CompoundButton.OnCheckedChangeListener;
 import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
-import com.example.vconference.custom.objects.UserData;
-import com.example.vconference.ui.ChatRoomActivity;
+import com.example.vconference.custom.objects.VUser;
 import com.example.vconference.ui.ContainerActivity;
+import com.example.vconference.ui.FragmentSettings;
 import com.quickblox.auth.QBAuth;
 import com.quickblox.auth.model.QBSession;
 import com.quickblox.chat.QBChatService;
+import com.quickblox.chat.listeners.QBVideoChatSignalingListener;
+import com.quickblox.core.QBCallback;
+import com.quickblox.core.QBEntityCallback;
 import com.quickblox.core.QBEntityCallbackImpl;
 import com.quickblox.core.exception.BaseServiceException;
 import com.quickblox.core.exception.QBResponseException;
+import com.quickblox.core.result.Result;
 import com.quickblox.core.server.BaseService;
 import com.quickblox.users.QBUsers;
 import com.quickblox.users.model.QBUser;
 import com.quickblox.videochat.core.QBVideoChatController;
+import com.quickblox.videochat.core.objects.QBVideoChat;
 
 public class MainActivity extends Activity {
 	static final int AUTO_PRESENCE_INTERVAL_IN_SECONDS = 30;
-	private static boolean isFirst = true;
 
 	private QBChatService chatService;
 	private Settings settings;
 	private EditText editText_user, editText_password;
 	private CheckBox checkBox_autoSign;
+	private ProgressBar progressBar;
+	private Button btn_signIn, btn_signUp;
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.login);
+		btn_signIn = (Button) findViewById(R.id.btn_signIn);
+		btn_signUp = (Button) findViewById(R.id.btn_signUp);
+		
+		btn_signIn.setEnabled(true);
+		btn_signUp.setEnabled(true);
+		
+		progressBar = (ProgressBar) findViewById(R.id.progressBar);
+		progressBar.setVisibility(View.GONE);
+//		deleteSession();
 		
 		try {
 			if (BaseService.getBaseService().getToken() != null) {
-				Log.i("user", ((VApp) getApplication()).getUser().toString());
-				Log.i("BaseService.getBaseService().getToken()", BaseService.getBaseService().getToken());
+//				Log.i("user", ((VApp) getApplication()).getUser().toString());
+//				Log.i("BaseService.getBaseService().getToken()", BaseService.getBaseService().getToken());
 				
-				Intent intent = new Intent(MainActivity.this, ChatRoomActivity.class);
+				Intent intent = new Intent(MainActivity.this, ContainerActivity.class);
 				startActivity(intent);
 				finish();
 			}
 		} catch (BaseServiceException e) {
-			e.printStackTrace();
+//			e.printStackTrace();
 		}
 		filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
 		filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
@@ -72,8 +89,10 @@ public class MainActivity extends Activity {
 		editText_password = (EditText) findViewById(R.id.editText_password);
 		checkBox_autoSign = (CheckBox) findViewById(R.id.checkBox_autoSign);
 		checkBox_autoSign.setChecked(settings.isSignInAutomatically());
+		
+		checkBox_autoSign.setEnabled(true);
 		if (settings.isSignInAutomatically()) {
-			editText_user.setText(settings.getEmail());
+			editText_user.setText(settings.getLogin());
 			editText_password.setText(settings.getPassword());
 		}
 
@@ -87,35 +106,34 @@ public class MainActivity extends Activity {
 				} else {
 					settings.setSignInAutomatically(isChecked, email, password);
 				}
-				System.out.println(isChecked);
 			}
 		});
+		
 	}
 
 	private void checkSignInAutomatically() {
-		if (!isFirst)
-			return;
 		if (settings.isSignInAutomatically()) {
-			editText_user.setText(settings.getEmail());
+			editText_user.setText(settings.getLogin());
 			editText_password.setText(settings.getPassword());
 			
-			signIn(settings.getEmail(), settings.getPassword()); 
+			signIn(settings.getLogin(), settings.getPassword()); 
 		} else {
-			editText_user.setText(null);
+			editText_user.setText(settings.getLogin());
 			editText_password.setText(null);
 		}
-		isFirst = false;
 	}
 
 	private void signIn(String userName, String password) {
+		progressBar.setVisibility(View.VISIBLE);
+		btn_signIn.setEnabled(false);
+		btn_signUp.setEnabled(false);
+		
 		editText_user.setEnabled(false);
 		editText_password.setEnabled(false);
+		
+		checkBox_autoSign.setEnabled(false);
 
-		if (!QBChatService.isInitialized()) {
-			QBChatService.init(getApplicationContext());
-		}
-
-		final QBUser user = new QBUser();
+		final VUser user = new VUser();
 		user.setLogin(userName);
 		user.setPassword(password);
 		
@@ -142,7 +160,12 @@ public class MainActivity extends Activity {
 			public void onError(List<String> errors) {
 				editText_user.setEnabled(true);
 				editText_password.setEnabled(true);
+				checkBox_autoSign.setEnabled(true);
+				btn_signIn.setEnabled(true);
+				btn_signUp.setEnabled(true);
+				
 				System.err.println(errors);
+				progressBar.setVisibility(View.GONE);
 			}
 		});
 
@@ -211,7 +234,6 @@ public class MainActivity extends Activity {
 					e.printStackTrace();
 				}
 				// go to Dialogs screen TODO
-//				Intent intent = new Intent(MainActivity.this, ChatRoomActivity.class);
 				Intent intent = new Intent(MainActivity.this, ContainerActivity.class);
 				startActivity(intent);
 				finish();
@@ -221,6 +243,7 @@ public class MainActivity extends Activity {
 			public void onError(List errors) {
 				AlertDialog.Builder dialog = new AlertDialog.Builder(MainActivity.this);
 				dialog.setMessage("chat login errors: " + errors).create().show();
+				progressBar.setVisibility(View.GONE);
 			}
 		});
 	}
@@ -249,11 +272,11 @@ public class MainActivity extends Activity {
 		QBAuth.createSession(new QBEntityCallbackImpl<QBSession>() {
 			@Override
 			public void onSuccess(QBSession session, Bundle params) {
-				final QBUser user = new QBUser("mania842", "lymn8421");
+				final VUser user = new VUser("mania842", "lymn8421");
 				user.setEmail("asdf@gmail.com");
 				user.setFullName("Yong");
 				user.setPhone("19175049043");
-				user.setCustomDataAsObject(new UserData("살리라"));
+				user.setStatus("살리라");
 
 				QBUsers.signUp(user, new QBEntityCallbackImpl<QBUser>() {
 					@Override
@@ -314,12 +337,32 @@ public class MainActivity extends Activity {
 		super.onPause();
 	}
 
+	@SuppressWarnings("deprecation")
 	public void deleteSession() {
-		try {
-			QBAuth.deleteSession();
-		} catch (QBResponseException e) {
-			e.printStackTrace();
-		}
-	}
+		QBChatService.getInstance().logout(new QBEntityCallback<QBUser>() {
+			@Override
+			public void onError(List<String> arg0) {
+			}
 
+			@Override
+			public void onSuccess() {
+			}
+
+			@Override
+			public void onSuccess(QBUser arg0, Bundle arg1) {
+			}
+		});
+		
+		QBAuth.deleteSession(new QBCallback() {
+			@Override
+			public void onComplete(Result arg0, Object arg1) {
+				System.out.println("onComplete");
+			}
+			
+			@Override
+			public void onComplete(Result arg0) {
+				System.out.println("on Complete 2");
+			}
+		});
+	}
 }
