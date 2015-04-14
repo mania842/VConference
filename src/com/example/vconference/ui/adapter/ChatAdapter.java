@@ -1,6 +1,7 @@
 package com.example.vconference.ui.adapter;
 
 import java.util.List;
+import java.util.Map;
 
 import android.app.Activity;
 import android.content.Context;
@@ -12,140 +13,156 @@ import android.widget.BaseAdapter;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.vconference.R;
 import com.example.vconference.VApp;
+import com.example.vconference.ui.ChatActivity;
 import com.example.vconference.util.TimeUtils;
 import com.quickblox.chat.model.QBChatMessage;
 import com.quickblox.users.model.QBUser;
 
 public class ChatAdapter extends BaseAdapter {
 
-    private final List<QBChatMessage> chatMessages;
-    private Activity context;
-    private VApp app;
+	private final List<QBChatMessage> chatMessages;
+	private ChatActivity context;
+	private VApp app;
 
-    public ChatAdapter(Activity context, List<QBChatMessage> chatMessages) {
-    	this.app = VApp.getInstance();
-        this.context = context;
-        this.chatMessages = chatMessages;
-    }
+	public ChatAdapter(ChatActivity context, List<QBChatMessage> chatMessages) {
+		this.app = VApp.getInstance();
+		this.context = context;
+		this.chatMessages = chatMessages;
+	}
 
-    @Override
-    public int getCount() {
-        if (chatMessages != null) {
-            return chatMessages.size();
-        } else {
-            return 0;
-        }
-    }
+	@Override
+	public int getCount() {
+		if (chatMessages != null) {
+			return chatMessages.size();
+		} else {
+			return 0;
+		}
+	}
 
-    @Override
-    public QBChatMessage getItem(int position) {
-        if (chatMessages != null) {
-            return chatMessages.get(position);
-        } else {
-            return null;
-        }
-    }
+	@Override
+	public QBChatMessage getItem(int position) {
+		if (chatMessages != null) {
+			return chatMessages.get(position);
+		} else {
+			return null;
+		}
+	}
 
-    @Override
-    public long getItemId(int position) {
-        return position;
-    }
+	@Override
+	public long getItemId(int position) {
+		return position;
+	}
 
-    @Override
-    public View getView(final int position, View convertView, ViewGroup parent) {
-        ViewHolder holder;
-        QBChatMessage chatMessage = getItem(position);
-        LayoutInflater vi = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+	@Override
+	public View getView(final int position, View convertView, ViewGroup parent) {
+		ViewHolder holder;
+		QBChatMessage chatMessage = getItem(position);
+		LayoutInflater vi = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
-        if (convertView == null) {
-            convertView = vi.inflate(R.layout.list_item_message, null);
-            holder = createViewHolder(convertView);
-            convertView.setTag(holder);
-        } else {
-            holder = (ViewHolder) convertView.getTag();
-        }
-        QBUser currentUser = app.getUser();
-        boolean isOutgoing = chatMessage.getSenderId() == null || chatMessage.getSenderId().equals(currentUser.getId());
-        setAlignment(holder, isOutgoing);
-        holder.txtMessage.setText(chatMessage.getBody());
-        if (chatMessage.getSenderId() != null) {
-        	String userName = app.getUserNameById(chatMessage.getSenderId());
-            holder.txtInfo.setText(userName + ": " + getTimeText(chatMessage));
-        } else {
-            holder.txtInfo.setText(getTimeText(chatMessage));
-        }
+		if (convertView == null) {
+			convertView = vi.inflate(R.layout.list_item_message, null);
+			holder = createViewHolder(convertView);
+			convertView.setTag(holder);
+		} else {
+			holder = (ViewHolder) convertView.getTag();
+		}
+		QBUser currentUser = app.getUser();
+		Map<String, String> chatMap = chatMessage.getProperties();
+		if (chatMap.containsKey(ChatActivity.VIDEO)) {
+			holder.content.setVisibility(View.GONE);
+			holder.layout_notification.setVisibility(View.VISIBLE);
+			holder.txtNotification.setText(chatMap.get(ChatActivity.VIDEO));
+			context.refreshCameraInfo();
+		} else {
+			boolean isOutgoing = chatMessage.getSenderId() == null || chatMessage.getSenderId().equals(currentUser.getId());
+			setAlignment(holder, isOutgoing);
+			holder.content.setVisibility(View.VISIBLE);
+			holder.txtMessage.setText(chatMessage.getBody());
+			holder.layout_notification.setVisibility(View.GONE);
+			if (chatMessage.getSenderId() != null) {
+				String userName = app.getUserNameById(chatMessage.getSenderId());
+				holder.txtInfo.setText(userName + ": " + getTimeText(chatMessage));
+			} else {
+				holder.txtInfo.setText(getTimeText(chatMessage));
+			}
+		}
 
-        return convertView;
-    }
+		return convertView;
+	}
 
-    public void add(QBChatMessage message) {
-        chatMessages.add(message);
-    }
+	public void add(QBChatMessage message) {
+		chatMessages.add(message);
+	}
 
-    public void add(List<QBChatMessage> messages) {
-        chatMessages.addAll(messages);
-    }
+	public void add(List<QBChatMessage> messages) {
+		chatMessages.addAll(messages);
+	}
 
-    private void setAlignment(ViewHolder holder, boolean isOutgoing) {
-        if (!isOutgoing) {
-            holder.contentWithBG.setBackgroundResource(R.drawable.incoming_message_bg);
+	private void setAlignment(ViewHolder holder, boolean isOutgoing) {
+		if (!isOutgoing) {
+			holder.contentWithBG.setBackgroundResource(R.drawable.incoming_message_bg);
 
-            LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) holder.contentWithBG.getLayoutParams();
-            layoutParams.gravity = Gravity.RIGHT;
-            holder.contentWithBG.setLayoutParams(layoutParams);
+			LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) holder.contentWithBG.getLayoutParams();
+			layoutParams.gravity = Gravity.RIGHT;
+			holder.contentWithBG.setLayoutParams(layoutParams);
 
-            RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) holder.content.getLayoutParams();
-            lp.addRule(RelativeLayout.ALIGN_PARENT_LEFT, 0);
-            lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
-            holder.content.setLayoutParams(lp);
-            layoutParams = (LinearLayout.LayoutParams) holder.txtMessage.getLayoutParams();
-            layoutParams.gravity = Gravity.RIGHT;
-            holder.txtMessage.setLayoutParams(layoutParams);
+			RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) holder.content.getLayoutParams();
+			lp.addRule(RelativeLayout.ALIGN_PARENT_LEFT, 0);
+			lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT);
+			holder.content.setLayoutParams(lp);
+			layoutParams = (LinearLayout.LayoutParams) holder.txtMessage.getLayoutParams();
+			layoutParams.gravity = Gravity.RIGHT;
+			holder.txtMessage.setLayoutParams(layoutParams);
 
-            layoutParams = (LinearLayout.LayoutParams) holder.txtInfo.getLayoutParams();
-            layoutParams.gravity = Gravity.RIGHT;
-            holder.txtInfo.setLayoutParams(layoutParams);
-        } else {
-            holder.contentWithBG.setBackgroundResource(R.drawable.outgoing_message_bg);
+			layoutParams = (LinearLayout.LayoutParams) holder.txtInfo.getLayoutParams();
+			layoutParams.gravity = Gravity.RIGHT;
+			holder.txtInfo.setLayoutParams(layoutParams);
+		} else {
+			holder.contentWithBG.setBackgroundResource(R.drawable.outgoing_message_bg);
 
-            LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) holder.contentWithBG.getLayoutParams();
-            layoutParams.gravity = Gravity.LEFT;
-            holder.contentWithBG.setLayoutParams(layoutParams);
+			LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) holder.contentWithBG.getLayoutParams();
+			layoutParams.gravity = Gravity.LEFT;
+			holder.contentWithBG.setLayoutParams(layoutParams);
 
-            RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) holder.content.getLayoutParams();
-            lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, 0);
-            lp.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
-            holder.content.setLayoutParams(lp);
-            layoutParams = (LinearLayout.LayoutParams) holder.txtMessage.getLayoutParams();
-            layoutParams.gravity = Gravity.LEFT;
-            holder.txtMessage.setLayoutParams(layoutParams);
+			RelativeLayout.LayoutParams lp = (RelativeLayout.LayoutParams) holder.content.getLayoutParams();
+			lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, 0);
+			lp.addRule(RelativeLayout.ALIGN_PARENT_LEFT);
+			holder.content.setLayoutParams(lp);
+			layoutParams = (LinearLayout.LayoutParams) holder.txtMessage.getLayoutParams();
+			layoutParams.gravity = Gravity.LEFT;
+			holder.txtMessage.setLayoutParams(layoutParams);
 
-            layoutParams = (LinearLayout.LayoutParams) holder.txtInfo.getLayoutParams();
-            layoutParams.gravity = Gravity.LEFT;
-            holder.txtInfo.setLayoutParams(layoutParams);
-        }
-    }
+			layoutParams = (LinearLayout.LayoutParams) holder.txtInfo.getLayoutParams();
+			layoutParams.gravity = Gravity.LEFT;
+			holder.txtInfo.setLayoutParams(layoutParams);
+		}
+	}
 
-    private ViewHolder createViewHolder(View v) {
-        ViewHolder holder = new ViewHolder();
-        holder.txtMessage = (TextView) v.findViewById(R.id.txtMessage);
-        holder.content = (LinearLayout) v.findViewById(R.id.content);
-        holder.contentWithBG = (LinearLayout) v.findViewById(R.id.contentWithBackground);
-        holder.txtInfo = (TextView) v.findViewById(R.id.txtInfo);
-        return holder;
-    }
+	private ViewHolder createViewHolder(View v) {
+		ViewHolder holder = new ViewHolder();
+		holder.txtMessage = (TextView) v.findViewById(R.id.txtMessage);
+		holder.content = (LinearLayout) v.findViewById(R.id.content);
+		holder.contentWithBG = (LinearLayout) v.findViewById(R.id.contentWithBackground);
+		holder.txtInfo = (TextView) v.findViewById(R.id.txtInfo);
+		holder.layout_notification = (LinearLayout) v.findViewById(R.id.layout_notification);
+		holder.txtNotification = (TextView) v.findViewById(R.id.notificaton);
+		return holder;
+	}
 
-    private String getTimeText(QBChatMessage message) {
-        return TimeUtils.millisToLongDHMS(message.getDateSent()*1000);
-    }
+	private String getTimeText(QBChatMessage message) {
+		return TimeUtils.millisToLongDHMS(message.getDateSent() * 1000);
+	}
 
-    private static class ViewHolder {
-        public TextView txtMessage;
-        public TextView txtInfo;
-        public LinearLayout content;
-        public LinearLayout contentWithBG;
-    }
+	private static class ViewHolder {
+		public TextView txtMessage;
+		public TextView txtInfo;
+		public LinearLayout content;
+		public LinearLayout contentWithBG;
+		public LinearLayout layout_notification;
+		public TextView txtNotification;
+	}
 }

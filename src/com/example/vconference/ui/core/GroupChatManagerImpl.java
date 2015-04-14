@@ -47,6 +47,11 @@ public class GroupChatManagerImpl extends QBMessageListenerImpl<QBGroupChat> imp
     	groupChatManager.updateDialog(dialog, requestBuilder, callback);
     }
     
+    public void updateDialog(QBDialog dialog, QBEntityCallback callback) {
+    	QBRequestUpdateBuilder requestBuilder = new QBRequestUpdateBuilder();
+    	groupChatManager.updateDialog(dialog, requestBuilder, callback);
+    }
+    
     public static QBChatMessage createChatNotificationForGroupChatUpdate(QBDialog dialog) {
         String dialogId = String.valueOf(dialog.getDialogId());
         String roomJid = dialog.getRoomJid();

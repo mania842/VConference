@@ -5,6 +5,28 @@
     android:background="#282828"
     android:orientation="vertical" >
 
+    <LinearLayout
+        android:id="@+id/startVideo"
+        style="?android:attr/buttonBarButtonStyle"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal" >
+
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_margin="5dp"
+            android:src="@drawable/ic_video" />
+
+        <TextView
+            android:id="@+id/txt_title"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="Start Video"
+            android:textColor="#ffffff"
+            android:typeface="sans" />
+    </LinearLayout>
+
     <Button
         android:id="@+id/btn_invite"
         style="?android:attr/buttonBarButtonStyle"

@@ -5,10 +5,11 @@
     android:orientation="horizontal" >
 
     <ImageView
+        android:id="@+id/user_icon"
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_gravity="center_vertical"
-        android:margin="5dp"
+        android:layout_margin="5dp"
         android:scaleType="centerCrop"
         android:src="@drawable/ic_user" />
 

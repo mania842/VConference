@@ -69,12 +69,14 @@ public class VApp extends Application {
         return dialogsUsers;
     }
 	
-	public ArrayList<VUser> getVUsers(ArrayList<Integer> userIds) {
+	public ArrayList<VUser> getVUsersWithoutMe(ArrayList<Integer> userIds) {
 		ArrayList<VUser> vUsers = new ArrayList<VUser>();
 		
 		for (Integer userId : userIds) {
-			VUser user = dialogsUsers.get(userId);
-			vUsers.add(user);
+			if (!userId.equals(user.getId())) {
+				VUser user = dialogsUsers.get(userId);
+				vUsers.add(user);
+			}
 		}
 		return vUsers;
 	}
