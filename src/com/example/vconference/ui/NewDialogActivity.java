@@ -3,7 +3,6 @@ package com.example.vconference.ui;
 import java.util.ArrayList;
 import java.util.List;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -69,11 +68,11 @@ public class NewDialogActivity extends ActionBarActivity {
 		}
 	}
 
-	@Override
-	public void onBackPressed() {
-		Intent i = new Intent(NewDialogActivity.this, FragmentChatRoom.class);
-		startActivity(i);
-		finish();
-
-	}
+//	@Override
+//	public void onBackPressed() {
+//		Intent i = new Intent(NewDialogActivity.this, FragmentChatRoom.class);
+//		startActivity(i);
+//		finish();
+//
+//	}
 }

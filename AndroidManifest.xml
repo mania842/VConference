@@ -51,6 +51,13 @@
         </activity>
         <activity android:name=".ui.ContainerActivity" >
         </activity>
+        <activity
+            android:name=".ui.AddFriendActivity"
+            android:windowSoftInputMode="stateHidden" >
+        </activity>
+        <activity android:name="SignupActivity" >
+        </activity>
+        <activity android:name=".ui.ProfileActivity"></activity>
     </application>
 
 </manifest>

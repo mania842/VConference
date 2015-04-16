@@ -5,17 +5,24 @@ import java.util.HashMap;
 import java.util.List;
 
 import android.app.Activity;
+import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.vconference.R;
 import com.example.vconference.VApp;
 import com.example.vconference.custom.objects.Contact;
+import com.example.vconference.custom.objects.FriendList;
 import com.example.vconference.custom.objects.VUser;
+import com.quickblox.core.QBEntityCallbackImpl;
+import com.quickblox.customobjects.QBCustomObjects;
+import com.quickblox.customobjects.model.QBCustomObject;
 import com.quickblox.users.model.QBUser;
 
 public class ContactAdapter extends BaseAdapter {
@@ -23,12 +30,17 @@ public class ContactAdapter extends BaseAdapter {
 	private LayoutInflater inflater;
 	private Activity activity;
 	private VApp app;
+	
+	private QBCustomObject qbCustomObject;
+	private List<VUser> friendList;
 //	private HashMap<String, VUser> contactMap; // can check if the contact is registered in DB
 
-	public ContactAdapter(List<Contact> dataSource, Activity activity) {
+	public ContactAdapter(List<Contact> dataSource, Activity activity, FriendList friendList) {
 		this.dataSource = dataSource;
 		this.inflater = LayoutInflater.from(activity);
 		this.activity = activity;
+		this.friendList = friendList.getFriendList();
+		this.qbCustomObject = friendList.getQbCustomObject();
 		this.app = (VApp) this.activity.getApplication();
 	}
 
@@ -51,7 +63,7 @@ public class ContactAdapter extends BaseAdapter {
 	}
 
 	@Override
-	public Object getItem(int position) {
+	public Contact getItem(int position) {
 		return dataSource.get(position);
 	}
 
@@ -72,6 +84,7 @@ public class ContactAdapter extends BaseAdapter {
 			holder.profileIcon = (ImageView) convertView.findViewById(R.id.profileIcon);
 			holder.contactName = (TextView) convertView.findViewById(R.id.contactName);
 			holder.status = (TextView) convertView.findViewById(R.id.status);
+			holder.addFriend = (ImageButton) convertView.findViewById(R.id.addFriend);
 			// holder.groupType = (TextView) convertView.findViewById(R.id.textViewGroupType);
 			convertView.setTag(holder);
 		} else {
@@ -80,7 +93,7 @@ public class ContactAdapter extends BaseAdapter {
 
 		// set data
 		//
-		Contact contact = dataSource.get(position);
+		final Contact contact = dataSource.get(position);
 		holder.contactName.setText(contact.getName());
 
 		if (contact.isHasId()) {
@@ -89,10 +102,51 @@ public class ContactAdapter extends BaseAdapter {
 			else
 				holder.status.setText(contact.getUser().getLogin());
 			holder.status.setVisibility(View.VISIBLE);
+			
+			if (friendList.contains(contact.getUser())) {
+				holder.addFriend.setVisibility(View.GONE);
+			} else {
+				holder.addFriend.setVisibility(View.VISIBLE);
+			}
 		} else {
 			holder.status.setVisibility(View.GONE);
+			holder.addFriend.setVisibility(View.GONE);
 		}
-		// holder.lastMessage.setText(contact.get);
+		
+		holder.addFriend.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				if (contact.getUser() != null) {
+					final QBCustomObject record = new QBCustomObject();
+					ArrayList<Integer> friends = new ArrayList<Integer>();
+					for (VUser vUser : friendList) {
+						friends.add(vUser.getId());
+					}
+					
+					VUser vUser = contact.getUser();
+					friends.add(vUser.getId());
+					friendList.add(vUser);
+					
+					record.setClassName(qbCustomObject.getClassName());
+					record.setCustomObjectId(qbCustomObject.getCustomObjectId());
+					record.putArray("myContacts", friends);
+					QBCustomObjects.updateObject(record, new QBEntityCallbackImpl<QBCustomObject>(){
+						@Override
+						public void onSuccess(QBCustomObject result, Bundle params) {
+							super.onSuccess(result, params);
+							notifyDataSetChanged();
+						}
+						
+						@Override
+						public void onError(List<String> errors) {
+							super.onError(errors);
+							System.out.println(errors);
+						}
+					});
+				}
+				System.out.println("clicked " + contact);
+			}
+		});
 
 		return convertView;
 	}
@@ -101,6 +155,7 @@ public class ContactAdapter extends BaseAdapter {
 		ImageView profileIcon;
 		TextView contactName;
 		TextView status;
+		ImageButton addFriend;
 		// TextView groupType;
 	}
 }

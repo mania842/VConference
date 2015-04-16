@@ -10,22 +10,44 @@
         android:layout_height="match_parent"
         android:orientation="vertical" >
 
-        <EditText
-            android:id="@+id/messageEdit"
+        <RelativeLayout
+            android:id="@+id/messageContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
-            android:layout_toLeftOf="@+id/chatSendButton"
-            android:autoText="true"
-            android:hint="message text" />
+            android:background="#f0f0f0"
+            android:paddingTop="5dp"
+            android:paddingBottom="5dp"
+            android:paddingLeft="5dp"
+            android:paddingRight="5dp" >
 
-        <Button
-            android:id="@+id/chatSendButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_toLeftOf="@+id/chatAddButton"
-            android:text="Send" />
+            <EditText
+                android:id="@+id/messageEdit"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginRight="5dp"
+                android:layout_toLeftOf="@+id/chatSendButton"
+                android:autoText="true"
+                android:background="@drawable/edit_text_style"
+                android:hint="message text" />
+
+            <Button
+                android:id="@+id/chatSendButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentRight="true"
+                android:layout_centerVertical="true"
+                android:minHeight="0dip"
+                android:minWidth="0dp"
+                android:layout_alignTop="@+id/messageEdit"
+                android:layout_alignBottom="@+id/messageEdit"
+                android:background="@drawable/send_button"
+                android:text="Send"
+                android:textColor="#ffffff"
+                android:textSize="13sp" />
+
+        </RelativeLayout>
 
         <Button
             android:id="@+id/chatAddButton"
@@ -33,7 +55,8 @@
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_alignParentRight="true"
-            android:text="Add" />
+            android:text="Add"
+            android:visibility="gone" />
 
         <Button
             android:id="@+id/getoccupants"
@@ -41,45 +64,26 @@
             android:layout_height="wrap_content"
             android:layout_above="@+id/chatAddButton"
             android:layout_alignParentRight="true"
-            android:text="users" />
+            android:text="users"
+            android:visibility="gone" />
 
         <ListView
             android:id="@+id/messagesContainer"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_above="@+id/messageEdit"
-            android:layout_alignParentLeft="false"
-            android:layout_alignParentTop="false"
-            android:layout_below="@+id/meLabel"
-            android:layout_marginBottom="20dp"
-            android:layout_marginTop="10dp"
+            android:layout_above="@+id/messageContainer"
+            android:layout_alignParentTop="true"
             android:divider="@null"
             android:listSelector="@android:color/transparent"
             android:transcriptMode="alwaysScroll" />
-
-        <TextView
-            android:id="@+id/meLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="left|center_vertical"
-            android:singleLine="false"
-            android:text="Me"
-            android:textSize="20dp" />
-
-        <TextView
-            android:id="@+id/companionLabel"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentRight="true"
-            android:text="Friend"
-            android:textSize="20dp" />
 
         <com.example.vconference.ui.view.OwnSurfaceView
             android:id="@+id/cameraView"
             android:layout_width="220dp"
             android:layout_height="200dp"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="5dp" />
+            android:layout_marginTop="5dp"
+            android:visibility="gone" />
 
         <com.example.vconference.ui.view.OpponentSurfaceView
             android:id="@+id/opponentView"
@@ -87,7 +91,8 @@
             android:layout_height="220dp"
             android:layout_below="@+id/cameraView"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="5dp" />
+            android:layout_marginTop="5dp"
+            android:visibility="gone" />
 
         <ProgressBar
             android:id="@+id/progressBar"

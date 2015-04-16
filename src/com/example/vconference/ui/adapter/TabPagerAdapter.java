@@ -5,17 +5,17 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 
 import com.example.vconference.ui.FragmentChatRoom;
-import com.example.vconference.ui.FragmentContactList;
+import com.example.vconference.ui.FragmentContacts;
 import com.example.vconference.ui.FragmentSettings;
 
 public class TabPagerAdapter extends FragmentPagerAdapter {
-	private FragmentContactList contactList;
+	private FragmentContacts contactList;
 	private FragmentChatRoom chatroom;
 	private FragmentSettings settings;
 	
 	public TabPagerAdapter(FragmentManager fm) {
 		super(fm);
-		contactList = new FragmentContactList();
+		contactList = new FragmentContacts();
 		chatroom = new FragmentChatRoom();
 		settings = new FragmentSettings();
 	}

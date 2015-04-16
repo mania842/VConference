@@ -1,28 +1,31 @@
 package com.example.vconference.ui.adapter;
 
+import java.text.Format;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import android.app.Activity;
+import android.annotation.SuppressLint;
 import android.content.Context;
-import android.view.Gravity;
+import android.text.format.DateFormat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.example.vconference.R;
 import com.example.vconference.VApp;
 import com.example.vconference.ui.ChatActivity;
-import com.example.vconference.util.TimeUtils;
 import com.quickblox.chat.model.QBChatMessage;
 import com.quickblox.users.model.QBUser;
 
+@SuppressLint("SimpleDateFormat")
 public class ChatAdapter extends BaseAdapter {
+	private static Format DATEFORMAT;
+	private static Format TIMEFORMAT;
 
 	private final List<QBChatMessage> chatMessages;
 	private ChatActivity context;
@@ -32,6 +35,8 @@ public class ChatAdapter extends BaseAdapter {
 		this.app = VApp.getInstance();
 		this.context = context;
 		this.chatMessages = chatMessages;
+		DATEFORMAT = DateFormat.getMediumDateFormat(context);
+		TIMEFORMAT = DateFormat.getTimeFormat(context);
 	}
 
 	@Override
@@ -70,28 +75,56 @@ public class ChatAdapter extends BaseAdapter {
 		} else {
 			holder = (ViewHolder) convertView.getTag();
 		}
+		if (position > 0) {
+			QBChatMessage preItem = getItem(position - 1);
+			if (!isSameDay(preItem, chatMessage)) {
+				holder.dateContent.setVisibility(View.VISIBLE);
+				holder.txtDate.setText(getDateText(chatMessage));
+				
+			} else {
+				holder.dateContent.setVisibility(View.GONE);
+			}
+		} else {
+			holder.dateContent.setVisibility(View.VISIBLE);
+			holder.txtDate.setText(getDateText(chatMessage));
+		}
+		
 		QBUser currentUser = app.getUser();
 		Map<String, String> chatMap = chatMessage.getProperties();
 		if (chatMap.containsKey(ChatActivity.VIDEO)) {
-			holder.content.setVisibility(View.GONE);
 			holder.layout_notification.setVisibility(View.VISIBLE);
 			holder.txtNotification.setText(chatMap.get(ChatActivity.VIDEO));
+			holder.txtNotificationDate.setText(getTimeText(chatMessage));
 			context.refreshCameraInfo();
+			
+			holder.myContent.setVisibility(View.GONE);
+			holder.otherContent.setVisibility(View.GONE);
 		} else {
 			boolean isOutgoing = chatMessage.getSenderId() == null || chatMessage.getSenderId().equals(currentUser.getId());
-			setAlignment(holder, isOutgoing);
-			holder.content.setVisibility(View.VISIBLE);
-			holder.txtMessage.setText(chatMessage.getBody());
 			holder.layout_notification.setVisibility(View.GONE);
-			if (chatMessage.getSenderId() != null) {
-				String userName = app.getUserNameById(chatMessage.getSenderId());
-				holder.txtInfo.setText(userName + ": " + getTimeText(chatMessage));
-			} else {
-				holder.txtInfo.setText(getTimeText(chatMessage));
-			}
+			
+			setMessage(holder, isOutgoing, chatMessage);
 		}
 
 		return convertView;
+	}
+
+	private void setMessage(ViewHolder holder, boolean isOutgoing, QBChatMessage chatMessage) {
+		if (isOutgoing) {
+			holder.myContent.setVisibility(View.VISIBLE);
+			holder.otherContent.setVisibility(View.GONE);
+			
+			holder.myTime.setText(getTimeText(chatMessage));
+			holder.myMessage.setText(chatMessage.getBody());
+		} else {
+			holder.otherContent.setVisibility(View.VISIBLE);
+			holder.myContent.setVisibility(View.GONE);
+			
+			String userName = app.getUserNameById(chatMessage.getSenderId());
+			holder.otherUserName.setText(userName);
+			holder.otherTime.setText(getTimeText(chatMessage));
+			holder.otherMessage.setText(chatMessage.getBody());
+		}
 	}
 
 	public void add(QBChatMessage message) {
@@ -102,7 +135,7 @@ public class ChatAdapter extends BaseAdapter {
 		chatMessages.addAll(messages);
 	}
 
-	private void setAlignment(ViewHolder holder, boolean isOutgoing) {
+/*	private void setAlignment(ViewHolder holder, boolean isOutgoing) {
 		if (!isOutgoing) {
 			holder.contentWithBG.setBackgroundResource(R.drawable.incoming_message_bg);
 
@@ -140,29 +173,84 @@ public class ChatAdapter extends BaseAdapter {
 			layoutParams.gravity = Gravity.LEFT;
 			holder.txtInfo.setLayoutParams(layoutParams);
 		}
-	}
+	}*/
 
 	private ViewHolder createViewHolder(View v) {
 		ViewHolder holder = new ViewHolder();
-		holder.txtMessage = (TextView) v.findViewById(R.id.txtMessage);
-		holder.content = (LinearLayout) v.findViewById(R.id.content);
-		holder.contentWithBG = (LinearLayout) v.findViewById(R.id.contentWithBackground);
-		holder.txtInfo = (TextView) v.findViewById(R.id.txtInfo);
-		holder.layout_notification = (LinearLayout) v.findViewById(R.id.layout_notification);
+		holder.dateContent = (RelativeLayout) v.findViewById(R.id.dateContent);
+		holder.txtDate = (TextView) v.findViewById(R.id.txtDate);
+		
+		holder.myContent = (RelativeLayout) v.findViewById(R.id.myContent);
+		holder.myTime = (TextView) v.findViewById(R.id.myTime);
+		holder.myMessage = (TextView) v.findViewById(R.id.myMessage);
+		
+		holder.otherContent = (RelativeLayout) v.findViewById(R.id.otherContent);
+		holder.otherTime = (TextView) v.findViewById(R.id.otherTime);
+		holder.otherMessage = (TextView) v.findViewById(R.id.otherMessage);
+		holder.otherUserName = (TextView) v.findViewById(R.id.otherUserName);
+		
+		holder.layout_notification = (RelativeLayout) v.findViewById(R.id.layout_notification);
 		holder.txtNotification = (TextView) v.findViewById(R.id.notificaton);
+		holder.txtNotificationDate = (TextView) v.findViewById(R.id.notificatonDate);
 		return holder;
 	}
 
-	private String getTimeText(QBChatMessage message) {
-		return TimeUtils.millisToLongDHMS(message.getDateSent() * 1000);
+	public String getDateText(QBChatMessage message) {
+		long time = message.getDateSent() * 1000;
+		Date date = new Date(time);
+		// Format format = new SimpleDateFormat("yyyy MM dd HH:mm:ss");
+		return DATEFORMAT.format(date);
 	}
+	public String getTimeText(QBChatMessage message) {
+		long time = message.getDateSent() * 1000;
+		Date date = new Date(time);
+		return TIMEFORMAT.format(date);
+	}
+	
+	public static boolean isSameDay(QBChatMessage message1, QBChatMessage message2) {
+		long time1 = message1.getDateSent() * 1000;
+		Date date1 = new Date(time1);
+		long time2 = message2.getDateSent() * 1000;
+		Date date2 = new Date(time2);
+		return isSameDay(date1, date2);
+		
+	}
+	public static boolean isSameDay(Date date1, Date date2) {
+		if (date1 == null || date2 == null) {
+			throw new IllegalArgumentException("The dates must not be null");
+		}
+		Calendar cal1 = Calendar.getInstance();
+		cal1.setTime(date1);
+		Calendar cal2 = Calendar.getInstance();
+		cal2.setTime(date2);
+		return isSameDay(cal1, cal2);
+	}
+	public static boolean isSameDay(Calendar cal1, Calendar cal2) {
+		if (cal1 == null || cal2 == null) {
+			throw new IllegalArgumentException("The dates must not be null");
+		}
+		return (cal1.get(Calendar.ERA) == cal2.get(Calendar.ERA) && cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) && cal1.get(Calendar.DAY_OF_YEAR) == cal2
+				.get(Calendar.DAY_OF_YEAR));
+	}
+	public static boolean isToday(Date date) {
+        return isSameDay(date, Calendar.getInstance().getTime());
+    }
 
 	private static class ViewHolder {
-		public TextView txtMessage;
-		public TextView txtInfo;
-		public LinearLayout content;
-		public LinearLayout contentWithBG;
-		public LinearLayout layout_notification;
+		public RelativeLayout dateContent;
+		public TextView txtDate;
+		
+		public RelativeLayout myContent;
+		public TextView myTime;
+		public TextView myMessage;
+		
+		public RelativeLayout otherContent;
+		public TextView otherTime;
+		public TextView otherMessage;
+		public TextView otherUserName;
+		
+		public RelativeLayout layout_notification;
 		public TextView txtNotification;
+		public TextView txtNotificationDate;
 	}
 }

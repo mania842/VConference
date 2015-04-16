@@ -23,6 +23,15 @@ public class ContainerActivity extends FragmentActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+//		View decorView = getWindow().getDecorView();
+//		// Hide the status bar.
+//		int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
+//		decorView.setSystemUiVisibility(uiOptions);
+//		// Remember that you should never show the action bar if the
+//		// status bar is hidden, so hide that too if necessary.
+//		getActionBar().hide();
+		
 		setContentView(R.layout.activity_main);
 		settings = Settings.getInstance();
 		tabAdapter = new TabPagerAdapter(getSupportFragmentManager());
@@ -34,11 +43,20 @@ public class ContainerActivity extends FragmentActivity {
 				actionBar.setSelectedNavigationItem(position);
 				settings.lastTab = position;
 				settings.saveSettings();
+				if (position == 1) {
+					FragmentChatRoom fragmentChatRoom = (FragmentChatRoom) tabAdapter.getItem(1);
+					if (fragmentChatRoom.isAdded())
+						fragmentChatRoom.refreshChatRoom();
+				}
 			}
 		});
 		tabViewPager.setAdapter(tabAdapter);
-		
+
 		actionBar = getActionBar();
+//		actionBar.setDisplayShowHomeEnabled(false);
+//		actionBar.setDisplayShowTitleEnabled(false);
+//		actionBar.setDisplayUseLogoEnabled(false);
+		
 		// Enable Tabs on Action Bar
 		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
 		ActionBar.TabListener tabListener = new ActionBar.TabListener() {
@@ -56,38 +74,44 @@ public class ContainerActivity extends FragmentActivity {
 			public void onTabReselected(android.app.ActionBar.Tab tab, android.app.FragmentTransaction ft) {
 			}
 		};
-		
-		
+
 		// Add New Tab
 		LayoutInflater inflater = LayoutInflater.from(this);
 		View tabView1 = inflater.inflate(R.layout.main_tab_view, null);
-		ImageView title1 = (ImageView)tabView1.findViewById(R.id.tabIcon);
+		ImageView title1 = (ImageView) tabView1.findViewById(R.id.tabIcon);
 		title1.setImageResource(R.drawable.ic_user);
-		
+
 		View tabView2 = inflater.inflate(R.layout.main_tab_view, null);
-		ImageView title2 = (ImageView)tabView2.findViewById(R.id.tabIcon);
+		ImageView title2 = (ImageView) tabView2.findViewById(R.id.tabIcon);
 		title2.setImageResource(R.drawable.ic_chat);
-		
+
 		View tabView3 = inflater.inflate(R.layout.main_tab_view, null);
-		ImageView title3 = (ImageView)tabView3.findViewById(R.id.tabIcon);
+		ImageView title3 = (ImageView) tabView3.findViewById(R.id.tabIcon);
 		title3.setImageResource(R.drawable.ic_settings);
-		
-		
-//		actionBar.addTab(actionBar.newTab().setText("Android").setTabListener(tabListener));
-//		actionBar.addTab(actionBar.newTab().setText("ios").setTabListener(tabListener));
-//		actionBar.addTab(actionBar.newTab().setText("windows").setTabListener(tabListener));
-//		actionBar.addTab(actionBar.newTab().setIcon(R.drawable.ic_user).setTabListener(tabListener));
-//		actionBar.addTab(actionBar.newTab().setIcon(R.drawable.ic_chat).setTabListener(tabListener));
-//		actionBar.addTab(actionBar.newTab().setIcon(R.drawable.ic_settings).setTabListener(tabListener));
-		
+
+		// actionBar.addTab(actionBar.newTab().setText("Android").setTabListener(tabListener));
+		// actionBar.addTab(actionBar.newTab().setText("ios").setTabListener(tabListener));
+		// actionBar.addTab(actionBar.newTab().setText("windows").setTabListener(tabListener));
+		// actionBar.addTab(actionBar.newTab().setIcon(R.drawable.ic_user).setTabListener(tabListener));
+		// actionBar.addTab(actionBar.newTab().setIcon(R.drawable.ic_chat).setTabListener(tabListener));
+		// actionBar.addTab(actionBar.newTab().setIcon(R.drawable.ic_settings).setTabListener(tabListener));
+
 		actionBar.addTab(actionBar.newTab().setCustomView(tabView1).setTabListener(tabListener));
 		actionBar.addTab(actionBar.newTab().setCustomView(tabView2).setTabListener(tabListener));
 		actionBar.addTab(actionBar.newTab().setCustomView(tabView3).setTabListener(tabListener));
-		
+
 		tabView1.getLayoutParams().width = 100;
 		tabView2.getLayoutParams().width = 100;
 		tabView3.getLayoutParams().width = 100;
-		
+
 		tabViewPager.setCurrentItem(settings.lastTab);
+	}
+
+	@Override
+	public void onResume() {
+		FragmentContacts fragmentContacts = (FragmentContacts) tabAdapter.getItem(0);
+		if (fragmentContacts.isAdded())
+			fragmentContacts.refreshFriendList();
+		super.onResume();
 	}
 }

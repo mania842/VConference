@@ -10,5 +10,6 @@
     <color name="accent_green">#97e08f</color>
     <color name="pressed">#555555</color>
     <color name="button_pressed">#55008bbc</color>
+    <color name="accent">#ff0000ff</color>
 
 </resources>

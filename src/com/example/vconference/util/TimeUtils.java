@@ -1,6 +1,9 @@
 package com.example.vconference.util;
 
+import java.text.Format;
 import java.util.Date;
+
+import android.text.format.DateFormat;
 
 /**
  * Created by igorkhomenko on 1/13/15.

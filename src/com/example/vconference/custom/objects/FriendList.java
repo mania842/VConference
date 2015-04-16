@@ -14,49 +14,70 @@ import java.util.List;
 import android.content.Context;
 import android.util.Log;
 
-public class ContactList implements Serializable {
-	private static final long serialVersionUID = 42L;
-	private static ContactList instance;
-	private List<Contact> userContactlist;
-	private List<Contact> allContactList;
+import com.quickblox.customobjects.model.QBCustomObject;
+
+public class FriendList implements Serializable {
+	private static final long serialVersionUID = 1847764722474607546L;
+	private static FriendList instance;
+	private List<VUser> friendList;
+	private Integer userId;
+	private QBCustomObject qbCustomObject;
 
 	private static String saveFile;
 
-	public static ContactList getInstance() {
+	private static FriendList getInstance() {
+		if (instance == null)
+			instance = new FriendList();
+		return instance;
+	}
+	public static FriendList getInstance(Integer userId) {
 		if (instance == null) {
-			instance = new ContactList();
+			instance = new FriendList(userId);
+		}
+		if (!userId.equals(instance.userId)) {
+			instance = new FriendList(userId);
+			instance.save();
 		}
 		return instance;
 	}
-
-	private ContactList() {
+	
+	private FriendList() {
+	}
+	private FriendList(Integer userId) {
+		this.userId = userId;
 	}
 
-	public List<Contact> getUserContactlist() {
-		return userContactlist;
+	public Integer getUserId() {
+		return userId;
 	}
 
-	public void setUserContactlist(List<Contact> userContactlist) {
-		this.userContactlist = userContactlist;
+	public void setUserId(Integer userId) {
+		this.userId = userId;
 	}
 
-	public List<Contact> getAllContactList() {
-		return allContactList;
+	public List<VUser> getFriendList() {
+		return friendList;
 	}
 
-	public void setAllContactList(List<Contact> allContactList) {
-		this.allContactList = allContactList;
+	public void setFriendList(List<VUser> friendList) {
+		this.friendList = friendList;
 	}
-
+	
+	public QBCustomObject getQbCustomObject() {
+		return qbCustomObject;
+	}
+	public void setQbCustomObject(QBCustomObject qbCustomObject) {
+		this.qbCustomObject = qbCustomObject;
+	}
 	// Deserialize settings.ser
 	@SuppressWarnings("resource")
-	public static ContactList getInstance(Context context, String saveFile) {
+	public static FriendList getInstance(Context context, String saveFile) {
 		if (instance != null)
 			return instance;
 		FileInputStream fio;
 		try {
-			if (ContactList.saveFile == null)
-				ContactList.saveFile = saveFile;
+			if (FriendList.saveFile == null)
+				FriendList.saveFile = saveFile;
 
 			File file = new File(saveFile);
 			if (!file.exists()) {
@@ -67,8 +88,8 @@ public class ContactList implements Serializable {
 			fio = new FileInputStream(saveFile);
 			ObjectInputStream ois = new ObjectInputStream(fio);
 			Object obj = ois.readObject();
-			if (obj instanceof ContactList) {
-				instance = (ContactList) obj;
+			if (obj instanceof FriendList) {
+				instance = (FriendList) obj;
 				return getInstance();
 			}
 		} catch (FileNotFoundException e) {
@@ -82,7 +103,7 @@ public class ContactList implements Serializable {
 		}
 		return null;
 	}
-	
+
 	public void save() {
 		try {
 			if (saveFile != null || saveFile.trim().equals("")) {
@@ -90,7 +111,7 @@ public class ContactList implements Serializable {
 
 				ObjectOutputStream oos = new ObjectOutputStream(fos);
 				oos.writeObject(this);
-				Log.e("save", "contactList.ser made");
+				Log.e("save", saveFile + " made");
 			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
@@ -99,8 +120,4 @@ public class ContactList implements Serializable {
 		}
 	}
 
-	@Override
-	public String toString() {
-		return "ContactList [userContactlist=" + userContactlist + ", allContactList=" + allContactList + "]";
-	}
 }

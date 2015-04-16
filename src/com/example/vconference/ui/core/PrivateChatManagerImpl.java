@@ -1,5 +1,7 @@
 package com.example.vconference.ui.core;
 
+import java.util.List;
+
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
 
@@ -13,6 +15,8 @@ import com.quickblox.chat.exception.QBChatException;
 import com.quickblox.chat.listeners.QBMessageListenerImpl;
 import com.quickblox.chat.listeners.QBPrivateChatManagerListener;
 import com.quickblox.chat.model.QBChatMessage;
+import com.quickblox.chat.model.QBDialog;
+import com.quickblox.core.QBEntityCallbackImpl;
 
 public class PrivateChatManagerImpl extends QBMessageListenerImpl<QBPrivateChat> implements ChatManager, QBPrivateChatManagerListener {
 
@@ -72,4 +76,9 @@ public class PrivateChatManagerImpl extends QBMessageListenerImpl<QBPrivateChat>
 
         Log.w(TAG, "private chat created: " + incomingPrivateChat.getParticipant() + ", createdLocally:" + createdLocally);
     }
+
+	@Override
+	public void leaveChat(QBDialog dialog, QBEntityCallbackImpl qbCallbackImpl) {
+		privateChatManager.deleteDialog(dialog.getDialogId(), qbCallbackImpl);
+	}
 }

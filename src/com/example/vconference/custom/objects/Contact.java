@@ -3,6 +3,8 @@ package com.example.vconference.custom.objects;
 import java.io.Serializable;
 import java.util.List;
 
+import com.quickblox.users.model.QBUser;
+
 public class Contact implements Comparable<Contact>, Serializable {
 	private static final long serialVersionUID = 3038766855273040642L;
 	private String name;
@@ -11,6 +13,17 @@ public class Contact implements Comparable<Contact>, Serializable {
 	private String status;
 	private boolean hasId;
 	private VUser user;
+
+	public Contact(QBUser user) {
+		this(new VUser(user));
+	}
+	public Contact(VUser user) {
+		super();
+		this.user = user;
+		this.name = user.getFullName();
+		this.status = user.getStatus();
+		this.hasId = true;
+	}
 
 	public Contact(String name, List<String> phones, List<String> emails) {
 		super();

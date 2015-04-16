@@ -49,6 +49,9 @@ public class FragmentSettings extends Fragment {
 
 				if (adapter.getItem(position) == SettingsItems.LOG_OUT) {
 					signOut();
+				} else if (adapter.getItem(position) == SettingsItems.ACCOUNT) {
+					Intent intent = new Intent(getActivity(), ProfileActivity.class);
+					startActivity(intent);
 				}
 			}
 

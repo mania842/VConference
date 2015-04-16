@@ -24,6 +24,8 @@ public class ChatRoomAdapter extends BaseAdapter {
 
 	public ChatRoomAdapter(List<QBDialog> dataSource, Activity activity) {
 		this.dataSource = dataSource;
+		if (dataSource == null)
+			dataSource = new ArrayList<QBDialog>();
 		this.inflater = LayoutInflater.from(activity);
 		this.activity = activity;
 		this.app = (VApp) this.activity.getApplication();
@@ -35,7 +37,11 @@ public class ChatRoomAdapter extends BaseAdapter {
 
 	@Override
 	public int getCount() {
-		return dataSource.size();
+		if (dataSource == null) {
+			dataSource = new ArrayList<QBDialog>();
+			return 0;
+		} else
+			return dataSource.size();
 	}
 
 	@Override
@@ -101,5 +107,9 @@ public class ChatRoomAdapter extends BaseAdapter {
 		TextView name;
 		TextView lastMessage;
 		TextView groupType;
+	}
+
+	public void setDataSource(List<QBDialog> dialogs) {
+		this.dataSource = dialogs;
 	}
 }

@@ -8,8 +8,9 @@ import java.util.Map;
 import android.app.Application;
 import android.content.Intent;
 
-import com.example.vconference.custom.objects.Contact;
+import com.example.vconference.custom.objects.ChatRoomList;
 import com.example.vconference.custom.objects.ContactList;
+import com.example.vconference.custom.objects.FriendList;
 import com.example.vconference.custom.objects.VUser;
 import com.quickblox.chat.QBChatService;
 import com.quickblox.chat.model.QBDialog;
@@ -60,8 +61,21 @@ public class VApp extends Application {
 		// Deserialize saved settings.ser
 		Settings.getInstance(getApplicationContext(), settingFile);
 		
-		String saveFile = APP_PATH + "/contactList.ser";
+		
+		String saveFile = APP_PATH + "/friendList.ser";
+		FriendList.getInstance(getApplicationContext(), saveFile);
+		
+		saveFile = APP_PATH + "/contactList.ser";
 		ContactList.getInstance(getApplicationContext(), saveFile);
+		
+		
+		
+		saveFile = APP_PATH + "/chatroomList.ser";
+		ChatRoomList chatRoomList = ChatRoomList.getInstance(getApplicationContext(), saveFile);
+		
+		this.dialogsUsers = chatRoomList.getDialogsUsers();
+		this.dialogsUsersNameMap = chatRoomList.getDialogsUsersNameMap();
+		
 	}
 	
 	
@@ -108,6 +122,11 @@ public class VApp extends Application {
         }
     }
 	
+	public void addDialogsUsers(VUser newUser) {
+		dialogsUsers.put(newUser.getId(), newUser);
+		dialogsUsersNameMap.put(newUser.getLogin(), newUser);
+    }
+	
 	public VUser getUser() {
 		return user;
 	}
@@ -115,8 +134,13 @@ public class VApp extends Application {
 	public void setUser(VUser user) {
 		this.user = user;
 	}
-
+	
 	public void setDialogsUsers(List<VUser> setUsers) {
+		if (dialogsUsers == null)
+			dialogsUsers = new HashMap<Integer, VUser>();
+		if (dialogsUsersNameMap == null)
+			dialogsUsersNameMap = new HashMap<String, VUser>();
+		
         dialogsUsers.clear();
         dialogsUsersNameMap.clear();
 
@@ -124,6 +148,9 @@ public class VApp extends Application {
             dialogsUsers.put(user.getId(), user);
             dialogsUsersNameMap.put(user.getLogin(), user);
         }
+        
+        ChatRoomList.getInstance().setDialogsUsers(dialogsUsers);
+        ChatRoomList.getInstance().setDialogsUsersNameMap(dialogsUsersNameMap);
     }
 
 	public Integer getOpponentIDForPrivateDialog(QBDialog dialog) {

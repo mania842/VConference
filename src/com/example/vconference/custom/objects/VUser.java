@@ -39,6 +39,11 @@ public class VUser extends QBUser implements Serializable {
 			userData = new UserData();
 		
 		userData.setStatus(status);
+		Gson gson = new Gson();
+		String gsonStr = gson.toJson(userData);
+		setCustomData(gsonStr);
+//		setCustomDataAsObject(userData);
+//		setCustomData(userData.toString());
 	}
 	
 	public String getStatus() {
@@ -60,7 +65,7 @@ public class VUser extends QBUser implements Serializable {
 		private static final long serialVersionUID = 4032409755963101278L;
 		private String status;
 
-		private UserData() {
+		public UserData() {
 		}
 
 		public String getStatus() {
@@ -71,5 +76,9 @@ public class VUser extends QBUser implements Serializable {
 			this.status = status;
 		}
 
+		@Override
+		public String toString() {
+			return "{status:\"" + status + "\"}";
+		}
 	}
 }

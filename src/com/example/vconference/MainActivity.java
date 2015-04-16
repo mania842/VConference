@@ -123,7 +123,7 @@ public class MainActivity extends Activity {
 		}
 	}
 
-	private void signIn(String userName, String password) {
+	private void signIn(final String userName, final String password) {
 		progressBar.setVisibility(View.VISIBLE);
 		btn_signIn.setEnabled(false);
 		btn_signUp.setEnabled(false);
@@ -142,18 +142,30 @@ public class MainActivity extends Activity {
 			public void onSuccess(QBSession session, Bundle params) {
 				// success, login to chat
 //				Log.e("Session created", "session created, token = " + session.getToken());
-				String email = editText_user.getText().toString();
-				String password = editText_password.getText().toString();
-				settings.setSignInAutomatically(checkBox_autoSign.isChecked(), email, password);
+				settings.setSignInAutomatically(checkBox_autoSign.isChecked(), userName, password);
 				settings.saveSettings();
 				chatService = QBChatService.getInstance();
 				user.setId(session.getUserId());
 				
-				
-				
+				QBUsers.getUser(user.getId(), new QBEntityCallbackImpl<QBUser>(){
 
-				((VApp) getApplication()).setUser(user);
-				loginToChat(user);
+					@Override
+					public void onError(List<String> errors) {
+						System.out.println(errors);
+						super.onError(errors);
+					}
+
+					@Override
+					public void onSuccess(QBUser user, Bundle params) {
+						super.onSuccess(user, params);
+						user.setPassword(password);
+						((VApp) getApplication()).setUser(new VUser(user));
+						loginToChat(user);
+						
+					}
+					
+				});
+				
 			}
 
 			@Override
@@ -269,33 +281,8 @@ public class MainActivity extends Activity {
 	}
 
 	private void signUp() {
-		QBAuth.createSession(new QBEntityCallbackImpl<QBSession>() {
-			@Override
-			public void onSuccess(QBSession session, Bundle params) {
-				final VUser user = new VUser("mania842", "lymn8421");
-				user.setEmail("asdf@gmail.com");
-				user.setFullName("Yong");
-				user.setPhone("19175049043");
-				user.setStatus("»ì¸®¶ó");
-
-				QBUsers.signUp(user, new QBEntityCallbackImpl<QBUser>() {
-					@Override
-					public void onSuccess(QBUser user, Bundle args) {
-
-					}
-
-					@Override
-					public void onError(List<String> errors) {
-					}
-				});
-			}
-
-			@Override
-			public void onError(List<String> errors) {
-			}
-		});
-		
-
+		Intent intent = new Intent(MainActivity.this, SignupActivity.class);
+		startActivity(intent);
 	}
 
 	private void networkChanged(boolean connected) {

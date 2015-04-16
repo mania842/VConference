@@ -115,7 +115,7 @@ public class ChatActivity extends Activity {
 			isAdmin = false;
 		}
 		initRightMenuView();
-		
+
 		refreshCameraInfo();
 	}
 
@@ -141,8 +141,26 @@ public class ChatActivity extends Activity {
 			}
 		});
 		contactList.setAdapter(adapterContact);
+
+		final LinearLayout leaveChat = (LinearLayout) slide_me.findViewById(R.id.leaveChat);
+		leaveChat.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				chat.leaveChat(dialog, new QBEntityCallbackImpl<Void>() {
+					@Override
+					public void onSuccess() {
+						onBackPressed();
+					}
+
+					@Override
+					public void onError(List<String> errors) {
+						System.out.println(errors);
+					}
+				});
+			}
+		});
 	}
-	
+
 	public void refreshCameraInfo() {
 		QBRequestGetBuilder requestBuilder = new QBRequestGetBuilder();
 		requestBuilder.setPagesLimit(5);
@@ -156,14 +174,15 @@ public class ChatActivity extends Activity {
 					boolean isChanged = isCameraSharing;
 					isCameraSharing = ((String) fields.get("cameraSharing")).equalsIgnoreCase("True");
 					isChanged = isChanged != isCameraSharing;
-					
+
 					if (isChanged) {
-						//TODO
+						// TODO
 					}
-					
+
 					System.out.println("@@@@@@@@@@@@@@@@@@@@@@@ isCameraSharing @@@@@@@@@@@@@@@@@ " + fields.get("cameraSharing") + " " + isCameraSharing);
 				}
 			}
+
 			@Override
 			public void onError(List<String> errors) {
 
@@ -212,16 +231,17 @@ public class ChatActivity extends Activity {
 					HashMap<String, Object> fields = new HashMap<String, Object>();
 					fields.put("cameraSharing", isStart);
 					record.setFields(fields);
-					
-					QBCustomObjects.updateObject(record, new QBEntityCallbackImpl<QBCustomObject>(){
+
+					QBCustomObjects.updateObject(record, new QBEntityCallbackImpl<QBCustomObject>() {
 						@Override
 						public void onSuccess(QBCustomObject object, Bundle params) {
-							
+
 						}
+
 						@Override
-					    public void onError(List<String> errors) {
-					 
-					    }
+						public void onError(List<String> errors) {
+
+						}
 					});
 				}
 			}
@@ -288,17 +308,20 @@ public class ChatActivity extends Activity {
 		// e.printStackTrace();
 		// }
 	}
-
+	
+	private void clearChatActivity() {
+		if (myView != null) {
+			myView.closeCamera();
+			if (myView.getVisibility() == View.VISIBLE)
+				setVideoObjectForDialog(false);
+		}
+		if (videoChatConfig != null)
+			QBVideoChatController.getInstance().finishVideoChat(videoChatConfig);
+	}
 	@Override
 	public void onBackPressed() {
 		try {
-			if (myView != null) {
-				myView.closeCamera();
-				if (myView.getVisibility() == View.VISIBLE)
-					setVideoObjectForDialog(false);
-			}
-			if (videoChatConfig != null)
-				QBVideoChatController.getInstance().finishVideoChat(videoChatConfig);
+			clearChatActivity();
 			chat.release();
 		} catch (XMPPException e) {
 			Log.e(TAG, "failed to release chat", e);
@@ -314,8 +337,6 @@ public class ChatActivity extends Activity {
 		addButton = (Button) findViewById(R.id.chatAddButton);
 		getOccupants = (Button) findViewById(R.id.getoccupants);
 
-		TextView meLabel = (TextView) findViewById(R.id.meLabel);
-		TextView companionLabel = (TextView) findViewById(R.id.companionLabel);
 		RelativeLayout container = (RelativeLayout) findViewById(R.id.container);
 		progressBar = (ProgressBar) findViewById(R.id.progressBar);
 
@@ -330,8 +351,6 @@ public class ChatActivity extends Activity {
 		case PUBLIC_GROUP:
 		case GROUP:
 			chat = new GroupChatManagerImpl(this);
-			container.removeView(meLabel);
-			container.removeView(companionLabel);
 
 			// Join group chat
 			//
@@ -358,8 +377,6 @@ public class ChatActivity extends Activity {
 			Integer opponentID = ((VApp) getApplication()).getOpponentIDForPrivateDialog(dialog);
 
 			chat = new PrivateChatManagerImpl(this, opponentID);
-
-			companionLabel.setText(((VApp) getApplication()).getDialogsUsers().get(opponentID).getLogin());
 
 			// Load CHat history
 			//

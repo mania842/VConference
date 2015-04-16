@@ -1,36 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="50dp" >
+    android:layout_height="wrap_content"
+    android:minHeight="47dp" >
 
     <ImageView
         android:id="@+id/profileIcon"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
         android:layout_centerVertical="true"
         android:layout_margin="5dp"
-        android:scaleType="centerCrop"
+        android:scaleType="fitCenter"
         android:src="@drawable/ic_user" />
 
     <TextView
         android:id="@+id/contactName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="5dp"
         android:layout_centerVertical="true"
+        android:layout_marginLeft="5dp"
         android:layout_toRightOf="@+id/profileIcon"
         android:text="contactName"
-        android:textSize="20sp" />
+        android:textSize="15sp" />
 
     <TextView
         android:id="@+id/status"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"
-        android:text="status"
+        android:layout_marginLeft="15dp"
         android:layout_toRightOf="@+id/contactName"
         android:background="@drawable/outgoing_message_bg"
-        android:layout_marginLeft="15dp"
-        android:textSize="17sp" />
+        android:text="status"
+        android:textSize="13sp" />
+
+    <ImageButton
+        android:id="@+id/addFriend"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:layout_marginBottom="10dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/send_button"
+        android:minHeight="0dip"
+        android:minWidth="0dp"
+        android:onClick="SearchFriend"
+        android:paddingLeft="0dp"
+        android:paddingRight="0dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_add_friend"
+        android:visibility="gone" />
 
 </RelativeLayout>

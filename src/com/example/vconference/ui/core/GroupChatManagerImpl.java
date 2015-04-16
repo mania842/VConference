@@ -195,6 +195,11 @@ public class GroupChatManagerImpl extends QBMessageListenerImpl<QBGroupChat> imp
 		// TODO Auto-generated method stub
 		super.processMessageRead(sender, messageID);
 	}
+
+	@Override
+	public void leaveChat(QBDialog dialog, QBEntityCallbackImpl qbCallbackImpl) {
+		groupChatManager.deleteDialog(dialog.getDialogId(), qbCallbackImpl);
+	}
     
     
 }

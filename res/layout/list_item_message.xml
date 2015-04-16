@@ -3,56 +3,136 @@
     android:layout_width="wrap_content"
     android:layout_height="wrap_content" >
 
-    <LinearLayout
-        android:id="@+id/content"
-        android:layout_width="wrap_content"
+    <RelativeLayout
+        android:id="@+id/dateContent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentRight="true"
-        android:orientation="vertical" >
+        android:layout_marginTop="5dp" >
+
+        <View
+            android:layout_width="wrap_content"
+            android:layout_height="1px"
+            android:layout_alignParentLeft="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"
+            android:layout_toLeftOf="@+id/txtDate"
+            android:background="#808080" />
 
         <TextView
-            android:id="@+id/txtInfo"
-            android:layout_width="wrap_content"
-            android:layout_height="20sp"
-            android:layout_gravity="right"
-            android:textColor="@android:color/secondary_text_dark"
-            android:textSize="10sp" />
-
-        <LinearLayout
-            android:id="@+id/contentWithBackground"
+            android:id="@+id/txtDate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="right"
+            android:layout_centerInParent="true"
+            android:text="Jan 12. 15."
+            android:textSize="13sp" />
+
+        <View
+            android:layout_width="wrap_content"
+            android:layout_height="1px"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="5dp"
+            android:layout_marginRight="5dp"
+            android:layout_toRightOf="@+id/txtDate"
+            android:background="#808080" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/myContent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/dateContent"
+        android:padding="5dp"
+        android:visibility="gone" >
+
+        <TextView
+            android:id="@+id/myTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/myMessage"
+            android:layout_marginRight="5dp"
+            android:layout_toLeftOf="@+id/myMessage"
+            android:text="10:10"
+            android:textColor="#808080"
+            android:textSize="11sp" />
+
+        <TextView
+            android:id="@+id/myMessage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
             android:background="@drawable/incoming_message_bg"
-            android:orientation="vertical"
-            android:paddingBottom="10dp"
-            android:paddingLeft="10dp" >
+            android:text="test"
+            android:textColor="#000000" />
+    </RelativeLayout>
 
-            <TextView
-                android:id="@+id/txtMessage"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:maxWidth="250dp"
-                android:textColor="@android:color/black" />
-        </LinearLayout>
-    </LinearLayout>
+    <RelativeLayout
+        android:id="@+id/otherContent"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/dateContent"
+        android:padding="5dp" >
 
-    <LinearLayout
+        <TextView
+            android:id="@+id/otherUserName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:text="User Name"
+            android:textColor="#000000"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/otherMessage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignLeft="@+id/otherUserName"
+            android:layout_below="@+id/otherUserName"
+            android:background="@drawable/outgoing_message_bg"
+            android:text="test"
+            android:textColor="#000000" />
+
+        <TextView
+            android:id="@+id/otherTime"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignBottom="@+id/otherMessage"
+            android:layout_marginRight="5dp"
+            android:layout_toRightOf="@+id/otherMessage"
+            android:text="10:10"
+            android:textColor="#808080"
+            android:textSize="11sp" />
+    </RelativeLayout>
+
+    <RelativeLayout
         android:id="@+id/layout_notification"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="#808080" 
-        android:padding="2dp"
+        android:layout_below="@+id/dateContent"
         android:layout_marginTop="3dp"
-        android:orientation="vertical">
-        <TextView 
+        android:background="#808080"
+        android:padding="2dp"
+        android:visibility="gone" >
+
+        <TextView
             android:id="@+id/notificaton"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
+            android:layout_centerInParent="true"
             android:text="adsf"
             android:textColor="#ffffff"
-            />
-    </LinearLayout>
+            android:textSize="15sp" />
+
+        <TextView
+            android:id="@+id/notificatonDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:text="2:45"
+            android:textColor="#77ffffff"
+            android:textSize="11sp" />
+    </RelativeLayout>
 
 </RelativeLayout>
