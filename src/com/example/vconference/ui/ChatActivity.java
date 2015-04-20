@@ -13,10 +13,13 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.hardware.Camera;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Display;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -24,6 +27,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.ProgressBar;
@@ -43,11 +47,9 @@ import com.example.vconference.ui.view.OpponentSurfaceView;
 import com.example.vconference.ui.view.OwnSurfaceView;
 import com.navdrawer.SimpleSideDrawer;
 import com.quickblox.chat.QBChatService;
-import com.quickblox.chat.QBPrivateChat;
 import com.quickblox.chat.model.QBChatMessage;
 import com.quickblox.chat.model.QBDialog;
 import com.quickblox.chat.model.QBDialogType;
-import com.quickblox.core.QBCallbackImpl;
 import com.quickblox.core.QBEntityCallbackImpl;
 import com.quickblox.core.request.QBRequestGetBuilder;
 import com.quickblox.customobjects.QBCustomObjects;
@@ -55,6 +57,7 @@ import com.quickblox.customobjects.model.QBCustomObject;
 import com.quickblox.videochat.core.QBVideoChatController;
 import com.quickblox.videochat.model.listeners.OnQBVideoChatListener;
 import com.quickblox.videochat.model.objects.CallState;
+import com.quickblox.videochat.model.objects.CallType;
 import com.quickblox.videochat.model.objects.VideoChatConfig;
 
 public class ChatActivity extends Activity {
@@ -62,13 +65,15 @@ public class ChatActivity extends Activity {
 	public static final String VIDEO = "VIDEO";
 	public static final String VIDEO_STARTED = "VIDEO STARTED";
 	public static final String VIDEO_ENDED = "VIDEO ENDED";
-	
+
 	public static final String INVITING_USER = "INVITING_USER";
 	public static final String INVITED_USERS = "INVITED_USERS";
 
 	public static final String EXTRA_MODE = "mode";
 	public static final String EXTRA_DIALOG = "dialog";
 	private final String PROPERTY_SAVE_TO_HISTORY = "save_to_history";
+
+	public static final int REQUEST_CODE = 102;
 
 	private EditText messageEditText;
 	private ListView messagesContainer;
@@ -90,10 +95,14 @@ public class ChatActivity extends Activity {
 	private ListView contactList;
 	private ContactListAdapter adapterContact;
 	private VApp app;
+	private VUser myUser;
 
 	private boolean isAdmin;
 	private boolean isCameraSharing;
+	private Integer cameraSharingUserId;
 	private LinearLayout startVideo;
+	private LinearLayout cameraSwitch;
+	private View line2;
 
 	public static void start(Context context, Bundle bundle) {
 		Intent intent = new Intent(context, ChatActivity.class);
@@ -106,8 +115,9 @@ public class ChatActivity extends Activity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_chat);
 		getActionBar().setDisplayHomeAsUpEnabled(true);
-		
+
 		app = (VApp) getApplication();
+		myUser = app.getUser();
 		initViews();
 		initVideoCalls();
 
@@ -119,15 +129,18 @@ public class ChatActivity extends Activity {
 			} else {
 				getActionBar().setTitle(dialog.getName());
 			}
-			
+
 		}
-		
+
 		isAdmin = dialog.getUserId().equals(app.getUser().getId());
+		if (isAdmin) {
+			setRequestedOrientation (ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+		}
 		initRightMenuView();
 
 		refreshCameraInfo();
 	}
-	
+
 	private void initRightMenuView() {
 		slide_me = new SimpleSideDrawer(this);
 		slide_me.setRightBehindContentView(R.layout.right_menu);
@@ -136,6 +149,8 @@ public class ChatActivity extends Activity {
 		adapterContact = new ContactListAdapter(vUsers, this, dialog);
 
 		View line = slide_me.findViewById(R.id.line);
+		line2 = slide_me.findViewById(R.id.line2);
+		line2.setVisibility(View.GONE);
 		startVideo = (LinearLayout) slide_me.findViewById(R.id.startVideo);
 		if (isAdmin) {
 			startVideo.setVisibility(View.VISIBLE);
@@ -158,7 +173,7 @@ public class ChatActivity extends Activity {
 			}
 		});
 		contactList.setAdapter(adapterContact);
-		
+
 		final Button btn_invite = (Button) slide_me.findViewById(R.id.btn_invite);
 		btn_invite.setOnClickListener(new OnClickListener() {
 			@Override
@@ -166,8 +181,8 @@ public class ChatActivity extends Activity {
 				Intent intent = new Intent(ChatActivity.this, NewGroupChatActivity.class);
 				intent.putExtra(NewGroupChatActivity.MODE_INVITE, true);
 				intent.putIntegerArrayListExtra(NewGroupChatActivity.INVITE_OCCUPANTS, dialog.getOccupants());
-				intent.putExtra(NewGroupChatActivity.INVITING_DIALOG, dialog); 
-				
+				intent.putExtra(NewGroupChatActivity.INVITING_DIALOG, dialog);
+
 				startActivityForResult(intent, NewGroupChatActivity.REQUEST_CODE);
 			}
 		});
@@ -189,30 +204,64 @@ public class ChatActivity extends Activity {
 				});
 			}
 		});
+
+		cameraSwitch = (LinearLayout) slide_me.findViewById(R.id.cameraSwitch);
+		cameraSwitch.setVisibility(View.GONE);
+		cameraSwitch.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				myView.switchCamera();
+			}
+		});
 	}
 
 	public void refreshCameraInfo() {
 		QBRequestGetBuilder requestBuilder = new QBRequestGetBuilder();
 		requestBuilder.setPagesLimit(5);
-		requestBuilder.eq("dialogJid", dialog.getRoomJid());
+		requestBuilder.eq("dialogId", dialog.getDialogId());
 		QBCustomObjects.getObjects("DialogInfo", requestBuilder, new QBEntityCallbackImpl<ArrayList<QBCustomObject>>() {
+
 			@Override
 			public void onSuccess(ArrayList<QBCustomObject> customObjects, Bundle params) {
 				if (customObjects.size() > 0) {
 					QBCustomObject record = customObjects.get(0);
 					HashMap<String, Object> fields = record.getFields();
 					boolean isChanged = isCameraSharing;
+					cameraSharingUserId = Integer.parseInt(fields.get("cameraSharingId").toString());
 					isCameraSharing = ((String) fields.get("cameraSharing")).equalsIgnoreCase("True");
+
 					isChanged = isChanged != isCameraSharing;
+					// System.out.println("camera sharing " + isCameraSharing);
+					// System.out.println("isChanged " + isChanged);
+					// System.out.println("cameraSharingId " + cameraSharingId);
+					// System.out.println(dialog.getUserId() + " " + app.getUserNameById(dialog.getUserId()));
 
 					if (isChanged) {
-						// TODO
+						if (isCameraSharing) {
+
+							if (!cameraSharingUserId.equals(myUser.getId())) {
+								VUser opponentUser = new VUser(cameraSharingUserId);
+								videoChatConfig = QBVideoChatController.getInstance().callFriend(opponentUser, CallType.VIDEO_AUDIO, null);
+							}
+							// myView.setVisibility(View.VISIBLE);
+
+							// System.out.println("camera sharing " + isCameraSharing);
+							// System.out.println(dialog.getUserId() + " " + app.getUserNameById(dialog.getUserId()));
+						} else {
+							if (!cameraSharingUserId.equals(myUser.getId())) {
+								if (videoChatConfig != null)
+									QBVideoChatController.getInstance().finishVideoChat(videoChatConfig);
+								opponentView.clear();
+								opponentView.setVisibility(View.GONE);								
+							}
+						}
 					}
 				}
 			}
 
 			@Override
 			public void onError(List<String> errors) {
+				System.out.println(errors);
 
 			}
 		});
@@ -221,25 +270,32 @@ public class ChatActivity extends Activity {
 	private void setVideoObjectForDialog(final boolean isStart) {
 		if (isStart) {
 			myView.setVisibility(View.VISIBLE);
+			cameraSwitch.setVisibility(View.VISIBLE);
+			line2.setVisibility(View.VISIBLE);
+			
 			myView.openCamera();
 		} else {
 			myView.closeCamera();
 			myView.setVisibility(View.GONE);
+			cameraSwitch.setVisibility(View.GONE);
+			line2.setVisibility(View.GONE);
 		}
 
 		QBRequestGetBuilder requestBuilder = new QBRequestGetBuilder();
 		requestBuilder.setPagesLimit(5);
-		requestBuilder.eq("dialogJid", dialog.getRoomJid());
+		requestBuilder.eq("dialogId", dialog.getDialogId());
 
 		QBCustomObjects.getObjects("DialogInfo", requestBuilder, new QBEntityCallbackImpl<ArrayList<QBCustomObject>>() {
+
 			@Override
 			public void onSuccess(ArrayList<QBCustomObject> customObjects, Bundle params) {
 				if (customObjects.size() == 0) {
 					QBCustomObject newRecord = new QBCustomObject();
 
 					// put fields
-					newRecord.putString("dialogJid", dialog.getRoomJid());
+					newRecord.putString("dialogId", dialog.getDialogId());
 					newRecord.putBoolean("cameraSharing", isStart);
+					newRecord.putInteger("cameraSharingId", myUser.getId());
 
 					// set the class name
 					newRecord.setClassName("DialogInfo");
@@ -247,6 +303,7 @@ public class ChatActivity extends Activity {
 					QBCustomObjects.createObject(newRecord, new QBEntityCallbackImpl<QBCustomObject>() {
 						@Override
 						public void onSuccess(QBCustomObject createdObject, Bundle params) {
+							sendMessageForVideo(isStart);
 						}
 
 						@Override
@@ -258,17 +315,19 @@ public class ChatActivity extends Activity {
 					record.setClassName("DialogInfo");
 					HashMap<String, Object> fields = new HashMap<String, Object>();
 					fields.put("cameraSharing", isStart);
+					fields.put("cameraSharingId", myUser.getId());
 					record.setFields(fields);
 
 					QBCustomObjects.updateObject(record, new QBEntityCallbackImpl<QBCustomObject>() {
+
 						@Override
 						public void onSuccess(QBCustomObject object, Bundle params) {
-
+							sendMessageForVideo(isStart);
 						}
 
 						@Override
 						public void onError(List<String> errors) {
-
+							System.out.println(errors);
 						}
 					});
 				}
@@ -279,13 +338,17 @@ public class ChatActivity extends Activity {
 
 			}
 		});
+	}
+
+	private void sendMessageForVideo(boolean isStart) {
 		// Send chat message
 		//
 		QBChatMessage chatMessage = new QBChatMessage();
-		if (isStart)
+		if (isStart) {
 			chatMessage.setProperty(VIDEO, VIDEO_STARTED);
-		else
+		} else {
 			chatMessage.setProperty(VIDEO, VIDEO_ENDED);
+		}
 		chatMessage.setProperty(PROPERTY_SAVE_TO_HISTORY, "1");
 		chatMessage.setDateSent(new Date().getTime() / 1000);
 
@@ -306,36 +369,54 @@ public class ChatActivity extends Activity {
 	public void initVideoCalls() {
 		opponentView = (OpponentSurfaceView) findViewById(R.id.opponentView);
 		myView = (OwnSurfaceView) findViewById(R.id.cameraView);
+
 		opponentView.setVisibility(View.GONE);
 		myView.setVisibility(View.GONE);
+
+		try {
+			Display display = getWindowManager().getDefaultDisplay();
+			int deviceHeight = display.getHeight(); // deprecated
+
+			Camera camera = Camera.open();
+			Camera.Parameters parameters = camera.getParameters();
+			Camera.Size size = parameters.getPictureSize();
+
+			int cameraHeight = size.height;
+			int cameraWidth = size.width;
+
+			float rate = (float) cameraHeight / (float) cameraWidth;
+			int viewHeight = (int) (deviceHeight * 0.4);
+			int viewWidth = (int) (viewHeight * rate);
+			myView.getLayoutParams().width = viewWidth;
+			myView.getLayoutParams().height = viewHeight;
+			opponentView.getLayoutParams().width = viewWidth;
+			opponentView.getLayoutParams().height = viewHeight;
+		} catch (RuntimeException e) {
+			e.printStackTrace();
+		}
 		// VideoChat settings
-		// videoChatConfig = getIntent().getParcelableExtra(VideoChatConfig.class.getCanonicalName());
-		//
-		// QBUser opponentUser = new QBUser(2758477);
-		//
-		// videoChatConfig = QBVideoChatController.getInstance().callFriend(opponentUser, CallType.VIDEO_AUDIO, null);
-		//
-		// myView.setCameraDataListener(new OwnSurfaceView.CameraDataListener() {
-		// @Override
-		// public void onCameraDataReceive(byte[] data) {
-		// if (videoChatConfig != null && videoChatConfig.getCallType() != CallType.VIDEO_AUDIO) {
-		// return;
-		// }
-		// QBVideoChatController.getInstance().sendVideo(data);
-		// }
-		// });
-		//
-		// // Set video chat listener
-		//
-		// QBUser videoUser = ((VApp) getApplication()).getUser();
-		//
-		// try {
-		// QBVideoChatController.getInstance().setQBVideoChatListener(videoUser, qbVideoChatListener);
-		// } catch (XMPPException e) {
-		// e.printStackTrace();
-		// }
+		videoChatConfig = getIntent().getParcelableExtra(VideoChatConfig.class.getCanonicalName());
+
+		myView.setCameraDataListener(new OwnSurfaceView.CameraDataListener() {
+			@Override
+			public void onCameraDataReceive(byte[] data) {
+				if (videoChatConfig != null && videoChatConfig.getCallType() != CallType.VIDEO_AUDIO) {
+					return;
+				}
+				QBVideoChatController.getInstance().sendVideo(data);
+			}
+		});
+
+		// Set video chat listener
+		VUser videoUser = ((VApp) getApplication()).getUser();
+
+		try {
+			QBVideoChatController.getInstance().setQBVideoChatListener(videoUser, qbVideoChatListener);
+		} catch (XMPPException e) {
+			e.printStackTrace();
+		}
 	}
-	
+
 	private void clearChatActivity() {
 		if (myView != null) {
 			myView.closeCamera();
@@ -344,7 +425,12 @@ public class ChatActivity extends Activity {
 		}
 		if (videoChatConfig != null)
 			QBVideoChatController.getInstance().finishVideoChat(videoChatConfig);
+
+		Intent intent = new Intent();
+		intent.putExtra(EXTRA_DIALOG, dialog);
+		setResult(Activity.RESULT_OK, intent);
 	}
+
 	@Override
 	public void onBackPressed() {
 		try {
@@ -355,6 +441,17 @@ public class ChatActivity extends Activity {
 		}
 		super.onBackPressed();
 	}
+
+	// @Override
+	// public void finish() {
+	// try {
+	// clearChatActivity();
+	// chat.release();
+	// } catch (XMPPException e) {
+	// Log.e(TAG, "failed to release chat", e);
+	// }
+	// super.finish();
+	// }
 
 	private void initViews() {
 		messagesContainer = (ListView) findViewById(R.id.messagesContainer);
@@ -438,41 +535,6 @@ public class ChatActivity extends Activity {
 				}
 			}
 		});
-
-//		addButton.setOnClickListener(new View.OnClickListener() {
-//			@Override
-//			public void onClick(View v) {
-//				((GroupChatManagerImpl) chat).inviteUser(dialog, 2759018, new QBEntityCallbackImpl() {
-//					@Override
-//					public void onSuccess() {
-//						for (Integer userID : dialog.getOccupants()) {
-//
-//							QBChatMessage chatMessage = GroupChatManagerImpl.createChatNotificationForGroupChatUpdate(dialog);
-//							long time = new Date().getTime();
-//							chatMessage.setProperty("date_sent", time + "");
-//							QBChatService chatService = QBChatService.getInstance();
-//							QBPrivateChat chat = QBChatService.getInstance().getPrivateChatManager().getChat(userID);
-//							if (chat == null) {
-//								chat = chatService.getPrivateChatManager().createChat(userID, null);
-//							}
-//
-//							try {
-//								chat.sendMessage(chatMessage);
-//							} catch (Exception e) {
-//								// error
-//							}
-//						}
-//					}
-//
-//					@Override
-//					public void onError(List list) {
-//						AlertDialog.Builder dialog = new AlertDialog.Builder(ChatActivity.this);
-//						dialog.setMessage("error when join group chat: " + list.toString()).create().show();
-//					}
-//				});
-//
-//			}
-//		});
 	}
 
 	private void loadChatHistory() {
@@ -504,7 +566,7 @@ public class ChatActivity extends Activity {
 		});
 	}
 
-	public void showMessage(QBChatMessage message) {
+	public void showMessage(final QBChatMessage message) {
 		adapter.add(message);
 
 		runOnUiThread(new Runnable() {
@@ -512,6 +574,11 @@ public class ChatActivity extends Activity {
 			public void run() {
 				adapter.notifyDataSetChanged();
 				scrollDown();
+
+				Map<String, String> chatMap = message.getProperties();
+				if (chatMap.containsKey(ChatActivity.VIDEO)) {
+					refreshCameraInfo();
+				}
 			}
 		});
 	}
@@ -569,9 +636,10 @@ public class ChatActivity extends Activity {
 				break;
 			case ON_CALL_END:
 				Toast.makeText(getBaseContext(), "ON_CALL_END", Toast.LENGTH_SHORT).show();
-
+				opponentView.setVisibility(View.GONE);
 				// clear opponent view
 				opponentView.clear();
+
 				// startStopVideoCallBtn.setText("Call user");
 				break;
 			case ACCEPT:
@@ -581,8 +649,9 @@ public class ChatActivity extends Activity {
 				break;
 			case ON_ACCEPT_BY_USER:
 				Toast.makeText(getBaseContext(), "ON_ACCEPT_BY_USER", Toast.LENGTH_SHORT).show();
-
 				QBVideoChatController.getInstance().onAcceptFriendCall(videoChatConfig, null);
+				if (!cameraSharingUserId.equals(myUser.getId()))
+					opponentView.setVisibility(View.VISIBLE);
 				break;
 			case ON_REJECTED_BY_USER:
 				Toast.makeText(getBaseContext(), "ON_REJECTED_BY_USER", Toast.LENGTH_SHORT).show();
@@ -591,7 +660,6 @@ public class ChatActivity extends Activity {
 				break;
 			case ON_CONNECTED:
 				Toast.makeText(getBaseContext(), "ON_CONNECTED", Toast.LENGTH_SHORT).show();
-
 				progressBar.setVisibility(View.INVISIBLE);
 
 				// startStopVideoCallBtn.setText("Hung up");
@@ -636,7 +704,7 @@ public class ChatActivity extends Activity {
 		}
 		return super.onOptionsItemSelected(item);
 	}
-	
+
 	@Override
 	public boolean onMenuItemSelected(int featureId, MenuItem item) {
 		switch (item.getItemId()) {
@@ -658,13 +726,12 @@ public class ChatActivity extends Activity {
 					dialog = (QBDialog) data.getSerializableExtra(NewGroupChatActivity.INVITING_DIALOG);
 					ArrayList<Integer> invitedUserIds = data.getIntegerArrayListExtra(NewGroupChatActivity.INVITED_USER_IDS);
 					initRightMenuView();
-					System.out.println(invitedUserIds);
 					slide_me.toggleRightDrawer();
-					
+
 					QBChatMessage chatMessage = new QBChatMessage();
-					VUser me = app.getUser(); 
+					VUser me = app.getUser();
 					chatMessage.setProperty(INVITING_USER, String.valueOf(me.getId()));
-					
+
 					String userIdsStr = "";
 					for (Integer userId : invitedUserIds) {
 						userIdsStr += userId + " ";
@@ -690,6 +757,5 @@ public class ChatActivity extends Activity {
 		// TODO Auto-generated method stub
 		super.onActivityResult(requestCode, resultCode, data);
 	}
-	
-	
+
 }

@@ -30,8 +30,8 @@ public class OwnSurfaceView extends SurfaceView implements SurfaceHolder.Callbac
 	private ConcurrentLinkedQueue<Runnable> cameraPreviewCallbackQueue;
 	private int currentCameraId;
 
-	private final int IMAGE_QUALITY = 100;
-	private int FPS = 100; // by default 4 fps
+	private final int IMAGE_QUALITY = 25;
+	private int FPS = 4; // by default 4 fps
 	private Camera.Size frameSize;
 
 	private Matrix rotationMatrixFront;

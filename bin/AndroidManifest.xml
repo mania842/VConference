@@ -45,9 +45,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".ui.ChatActivity" >
-        </activity>
-        <activity android:name=".ui.NewDialogActivity" >
+        <activity
+            android:name=".ui.ChatActivity"
+            android:screenOrientation="portrait" >
         </activity>
         <activity android:name=".ui.ContainerActivity" >
         </activity>
@@ -64,7 +64,8 @@
             android:label="@string/select_friends"
             android:windowSoftInputMode="stateHidden" >
         </activity>
-        <activity android:name=".ui.ProfileEditActivity"></activity>
+        <activity android:name=".ui.ProfileEditActivity" >
+        </activity>
     </application>
 
 </manifest>

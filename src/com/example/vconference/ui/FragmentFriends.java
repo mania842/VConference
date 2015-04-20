@@ -60,8 +60,12 @@ public class FragmentFriends extends Fragment {
 		settings = Settings.getInstance();
 		app = ((VApp) getActivity().getApplication());
 		myUser = app.getUser();
-		friendList = FriendList.getInstance(myUser.getId());
+		System.out.println("myUser " + myUser);
 		View layout = inflater.inflate(R.layout.activity_contact_list, container, false);
+		if (myUser == null)
+			return layout;
+		friendList = FriendList.getInstance(myUser.getId());
+		
 		friendListView = (ListView) layout.findViewById(R.id.list);
 		showSwitch = (Switch) layout.findViewById(R.id.showSwitch);
 		showSwitch.setVisibility(View.GONE);

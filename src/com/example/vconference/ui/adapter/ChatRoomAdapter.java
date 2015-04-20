@@ -1,6 +1,9 @@
 package com.example.vconference.ui.adapter;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -35,6 +38,32 @@ public class ChatRoomAdapter extends BaseAdapter {
 		this.app = (VApp) this.activity.getApplication();
 		userMap = app.getDialogsUsers();
 	}
+
+//	public void addDialog(QBDialog newDialog) {
+//		boolean contains = false;
+//		for (QBDialog dialog : dataSource) {
+//			if (dialog.getDialogId().equals(newDialog.getDialogId())) {
+//				dialog = newDialog;
+//				contains = true;
+//				break;
+//			}
+//		}
+//
+//		if (!contains)
+//			dataSource.add(0, newDialog);
+//
+//		Collections.sort(dataSource, new Comparator<QBDialog>() {
+//			@Override
+//			public int compare(QBDialog d1, QBDialog d2) {
+//
+//				Date d1lastDate, d2lastDate;
+//				d1lastDate = d1.getLastMessage() != null ? new Date(d1.getLastMessageDateSent() * 1000) : d1.getCreatedAt();
+//				d2lastDate = d2.getLastMessage() != null ? new Date(d2.getLastMessageDateSent() * 1000) : d2.getCreatedAt();
+//				return d2lastDate.compareTo(d1lastDate);
+//			}
+//		});
+//
+//	}
 
 	public List<QBDialog> getDataSource() {
 		return dataSource;
@@ -106,7 +135,7 @@ public class ChatRoomAdapter extends BaseAdapter {
 			Integer opponentID = app.getOpponentIDForPrivateDialog(dialog);
 			QBUser user = app.getDialogsUsers().get(opponentID);
 			if (user != null) {
-				holder.name.setText(user.getLogin() == null ? user.getFullName() : user.getLogin());
+				holder.name.setText(app.getUserNameById(user.getId()));
 			}
 		}
 

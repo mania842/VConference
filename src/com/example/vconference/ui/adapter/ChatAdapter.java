@@ -89,10 +89,11 @@ public class ChatAdapter extends BaseAdapter {
 			holder.txtNotificationDate.setVisibility(View.VISIBLE);
 			holder.txtNotification.setText(chatMap.get(ChatActivity.VIDEO));
 			holder.txtNotificationDate.setText(VApp.getTimeText(chatMessage));
-			context.refreshCameraInfo();
+//			context.refreshCameraInfo();
 
 			holder.myContent.setVisibility(View.GONE);
 			holder.otherContent.setVisibility(View.GONE);
+			
 		} else if (chatMap.containsKey(ChatActivity.INVITING_USER)) {
 			holder.layout_notification.setVisibility(View.VISIBLE);
 			holder.txtNotificationDate.setVisibility(View.GONE);

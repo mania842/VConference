@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.AsyncTask;
@@ -98,7 +99,9 @@ public class FragmentChatRoom extends Fragment {
 
 				// Open chat activity
 				//
-				ChatActivity.start(getActivity(), bundle);
+				Intent intent = new Intent(getActivity(), ChatActivity.class);
+				intent.putExtras(bundle);
+				startActivityForResult(intent, ChatActivity.REQUEST_CODE);
 			}
 		});
 		refreshChatRoom();
@@ -233,12 +236,23 @@ public class FragmentChatRoom extends Fragment {
 	public boolean onOptionsItemSelected(MenuItem item) {
 		int id = item.getItemId();
 		if (id == R.id.new_chat) {
-
-//			Intent intent = new Intent(getActivity(), NewDialogActivity.class);
 			Intent intent = new Intent(getActivity(), NewGroupChatActivity.class);
 			startActivity(intent);
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
+	}
+
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode == ChatActivity.REQUEST_CODE) {
+			if (resultCode == Activity.RESULT_OK) {
+//				QBDialog dialog = (QBDialog) data.getSerializableExtra(ChatActivity.EXTRA_DIALOG);
+				refreshChatRoom();
+//				adapter.addDialog(dialog);
+//				adapter.notifyDataSetChanged();
+			}
+		}
+		super.onActivityResult(requestCode, resultCode, data);
 	}
 }

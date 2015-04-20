@@ -5,6 +5,7 @@ import android.app.ActionBar;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager;
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
@@ -100,9 +101,12 @@ public class ContainerActivity extends FragmentActivity {
 		actionBar.addTab(actionBar.newTab().setCustomView(tabView2).setTabListener(tabListener));
 		actionBar.addTab(actionBar.newTab().setCustomView(tabView3).setTabListener(tabListener));
 
-		tabView1.getLayoutParams().width = 100;
-		tabView2.getLayoutParams().width = 100;
-		tabView3.getLayoutParams().width = 100;
+		Display display = getWindowManager().getDefaultDisplay(); 
+		int width = display.getWidth();
+		width /= 5;
+		tabView1.getLayoutParams().width = width;
+		tabView2.getLayoutParams().width = width;
+		tabView3.getLayoutParams().width = width;
 
 		tabViewPager.setCurrentItem(settings.lastTab);
 	}

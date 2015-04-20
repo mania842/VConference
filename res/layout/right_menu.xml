@@ -28,10 +28,39 @@
     </LinearLayout>
 
     <View
-        android:id="@+id/line"
+        android:id="@+id/line2"
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_below="@+id/startVideo"
+        android:background="#808080" />
+
+    <LinearLayout
+        android:id="@+id/cameraSwitch"
+        style="?android:attr/buttonBarButtonStyle"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/startVideo"
+        android:orientation="horizontal" >
+
+        <ImageView
+            android:layout_width="30dp"
+            android:layout_height="30dp"
+            android:layout_margin="5dp"
+            android:src="@drawable/ic_camera_switch" />
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            android:text="Switch Camera"
+            android:textColor="#ffffff"
+            android:typeface="sans" />
+    </LinearLayout>
+
+    <View
+        android:id="@+id/line"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_below="@+id/cameraSwitch"
         android:background="#808080" />
 
     <Button
@@ -39,14 +68,14 @@
         style="?android:attr/buttonBarButtonStyle"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/startVideo"
+        android:layout_below="@+id/line"
         android:background="@drawable/button_pressed"
         android:gravity="left|center_vertical"
         android:padding="10dp"
         android:text="+ Invite"
         android:textColor="#ffffff"
         android:typeface="sans" />
-    
+
     <View
         android:id="@+id/line1"
         android:layout_width="match_parent"

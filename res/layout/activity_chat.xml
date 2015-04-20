@@ -11,15 +11,36 @@
         android:orientation="vertical" >
 
         <RelativeLayout
+            android:id="@+id/cameraLayout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" >
+
+            <com.example.vconference.ui.view.OwnSurfaceView
+                android:id="@+id/cameraView"
+                android:layout_width="200dp"
+                android:layout_height="220dp"
+                android:layout_centerHorizontal="true"
+                android:visibility="gone" />
+
+            <com.example.vconference.ui.view.OpponentSurfaceView
+                android:id="@+id/opponentView"
+                android:layout_width="200dp"
+                android:layout_height="220dp"
+                android:layout_below="@+id/cameraView"
+                android:layout_centerHorizontal="true"
+                android:visibility="gone" />
+        </RelativeLayout>
+
+        <RelativeLayout
             android:id="@+id/messageContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:background="#f0f0f0"
-            android:paddingTop="5dp"
             android:paddingBottom="5dp"
             android:paddingLeft="5dp"
-            android:paddingRight="5dp" >
+            android:paddingRight="5dp"
+            android:paddingTop="5dp" >
 
             <EditText
                 android:id="@+id/messageEdit"
@@ -36,17 +57,16 @@
                 android:id="@+id/chatSendButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_alignBottom="@+id/messageEdit"
                 android:layout_alignParentRight="true"
+                android:layout_alignTop="@+id/messageEdit"
                 android:layout_centerVertical="true"
+                android:background="@drawable/send_button"
                 android:minHeight="0dip"
                 android:minWidth="0dp"
-                android:layout_alignTop="@+id/messageEdit"
-                android:layout_alignBottom="@+id/messageEdit"
-                android:background="@drawable/send_button"
                 android:text="Send"
                 android:textColor="#ffffff"
                 android:textSize="13sp" />
-
         </RelativeLayout>
 
         <ListView
@@ -54,27 +74,10 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_above="@+id/messageContainer"
-            android:layout_alignParentTop="true"
+            android:layout_below="@+id/cameraLayout"
             android:divider="@null"
             android:listSelector="@android:color/transparent"
             android:transcriptMode="alwaysScroll" />
-
-        <com.example.vconference.ui.view.OwnSurfaceView
-            android:id="@+id/cameraView"
-            android:layout_width="220dp"
-            android:layout_height="200dp"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="5dp"
-            android:visibility="gone" />
-
-        <com.example.vconference.ui.view.OpponentSurfaceView
-            android:id="@+id/opponentView"
-            android:layout_width="200dp"
-            android:layout_height="220dp"
-            android:layout_below="@+id/cameraView"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="5dp"
-            android:visibility="gone" />
 
         <ProgressBar
             android:id="@+id/progressBar"
