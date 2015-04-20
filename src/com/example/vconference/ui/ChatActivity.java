@@ -385,7 +385,7 @@ public class ChatActivity extends Activity {
 			int cameraWidth = size.width;
 
 			float rate = (float) cameraHeight / (float) cameraWidth;
-			int viewHeight = (int) (deviceHeight * 0.4);
+			int viewHeight = (int) (deviceHeight * 0.3);
 			int viewWidth = (int) (viewHeight * rate);
 			myView.getLayoutParams().width = viewWidth;
 			myView.getLayoutParams().height = viewHeight;

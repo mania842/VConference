@@ -30,10 +30,11 @@ public class ContactAdapter extends BaseAdapter {
 	private LayoutInflater inflater;
 	private Activity activity;
 	private VApp app;
-	
+
 	private QBCustomObject qbCustomObject;
 	private List<VUser> friendList;
-//	private HashMap<String, VUser> contactMap; // can check if the contact is registered in DB
+
+	// private HashMap<String, VUser> contactMap; // can check if the contact is registered in DB
 
 	public ContactAdapter(List<Contact> dataSource, Activity activity, FriendList friendList) {
 		this.dataSource = dataSource;
@@ -44,13 +45,14 @@ public class ContactAdapter extends BaseAdapter {
 		this.app = (VApp) this.activity.getApplication();
 	}
 
-//	public void setContactMap(HashMap<String, VUser> contactMap) {
-//		this.contactMap = contactMap;
-//
-//	}
+	// public void setContactMap(HashMap<String, VUser> contactMap) {
+	// this.contactMap = contactMap;
+	//
+	// }
 	public void setDataSource(List<Contact> dataSource) {
 		this.dataSource = dataSource;
 	}
+
 	public List<Contact> getDataSource() {
 		return dataSource;
 	}
@@ -102,17 +104,21 @@ public class ContactAdapter extends BaseAdapter {
 			else
 				holder.status.setText(contact.getUser().getLogin());
 			holder.status.setVisibility(View.VISIBLE);
-			
-			if (friendList.contains(contact.getUser())) {
-				holder.addFriend.setVisibility(View.GONE);
-			} else {
+
+			if (friendList == null) {
 				holder.addFriend.setVisibility(View.VISIBLE);
+			} else {
+				if (friendList.contains(contact.getUser())) {
+					holder.addFriend.setVisibility(View.GONE);
+				} else {
+					holder.addFriend.setVisibility(View.VISIBLE);
+				}
 			}
 		} else {
 			holder.status.setVisibility(View.GONE);
 			holder.addFriend.setVisibility(View.GONE);
 		}
-		
+
 		holder.addFriend.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -122,21 +128,21 @@ public class ContactAdapter extends BaseAdapter {
 					for (VUser vUser : friendList) {
 						friends.add(vUser.getId());
 					}
-					
+
 					VUser vUser = contact.getUser();
 					friends.add(vUser.getId());
 					friendList.add(vUser);
-					
+
 					record.setClassName(qbCustomObject.getClassName());
 					record.setCustomObjectId(qbCustomObject.getCustomObjectId());
 					record.putArray("myContacts", friends);
-					QBCustomObjects.updateObject(record, new QBEntityCallbackImpl<QBCustomObject>(){
+					QBCustomObjects.updateObject(record, new QBEntityCallbackImpl<QBCustomObject>() {
 						@Override
 						public void onSuccess(QBCustomObject result, Bundle params) {
 							super.onSuccess(result, params);
 							notifyDataSetChanged();
 						}
-						
+
 						@Override
 						public void onError(List<String> errors) {
 							super.onError(errors);
