@@ -39,31 +39,31 @@ public class ChatRoomAdapter extends BaseAdapter {
 		userMap = app.getDialogsUsers();
 	}
 
-//	public void addDialog(QBDialog newDialog) {
-//		boolean contains = false;
-//		for (QBDialog dialog : dataSource) {
-//			if (dialog.getDialogId().equals(newDialog.getDialogId())) {
-//				dialog = newDialog;
-//				contains = true;
-//				break;
-//			}
-//		}
-//
-//		if (!contains)
-//			dataSource.add(0, newDialog);
-//
-//		Collections.sort(dataSource, new Comparator<QBDialog>() {
-//			@Override
-//			public int compare(QBDialog d1, QBDialog d2) {
-//
-//				Date d1lastDate, d2lastDate;
-//				d1lastDate = d1.getLastMessage() != null ? new Date(d1.getLastMessageDateSent() * 1000) : d1.getCreatedAt();
-//				d2lastDate = d2.getLastMessage() != null ? new Date(d2.getLastMessageDateSent() * 1000) : d2.getCreatedAt();
-//				return d2lastDate.compareTo(d1lastDate);
-//			}
-//		});
-//
-//	}
+	// public void addDialog(QBDialog newDialog) {
+	// boolean contains = false;
+	// for (QBDialog dialog : dataSource) {
+	// if (dialog.getDialogId().equals(newDialog.getDialogId())) {
+	// dialog = newDialog;
+	// contains = true;
+	// break;
+	// }
+	// }
+	//
+	// if (!contains)
+	// dataSource.add(0, newDialog);
+	//
+	// Collections.sort(dataSource, new Comparator<QBDialog>() {
+	// @Override
+	// public int compare(QBDialog d1, QBDialog d2) {
+	//
+	// Date d1lastDate, d2lastDate;
+	// d1lastDate = d1.getLastMessage() != null ? new Date(d1.getLastMessageDateSent() * 1000) : d1.getCreatedAt();
+	// d2lastDate = d2.getLastMessage() != null ? new Date(d2.getLastMessageDateSent() * 1000) : d2.getCreatedAt();
+	// return d2lastDate.compareTo(d1lastDate);
+	// }
+	// });
+	//
+	// }
 
 	public List<QBDialog> getDataSource() {
 		return dataSource;
@@ -162,19 +162,21 @@ public class ChatRoomAdapter extends BaseAdapter {
 
 	private String usersListToChatName(List<Integer> occupants) {
 		List<VUser> vUserList = new ArrayList<VUser>();
-		for (Integer id : occupants) {
-			VUser vUser = userMap.get(id);
-			if (!vUser.equals(app.getUser())) {
-				vUserList.add(vUser);
+		String chatName = "";
+		if (userMap != null) {
+			for (Integer id : occupants) {
+				VUser vUser = userMap.get(id);
+				if (!vUser.equals(app.getUser())) {
+					vUserList.add(vUser);
+				}
+			}
+			for (VUser user : vUserList) {
+				String prefix = chatName.equals("") ? "" : ", ";
+				chatName = chatName + prefix + app.getUserNameById(user.getId());
+				// chatName = chatName + prefix + user.getLogin();
 			}
 		}
-
-		String chatName = "";
-		for (VUser user : vUserList) {
-			String prefix = chatName.equals("") ? "" : ", ";
-			chatName = chatName + prefix + app.getUserNameById(user.getId());
-			// chatName = chatName + prefix + user.getLogin();
-		}
+		
 		return chatName;
 	}
 
