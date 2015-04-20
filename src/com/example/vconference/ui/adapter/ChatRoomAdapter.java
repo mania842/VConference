@@ -2,16 +2,19 @@ package com.example.vconference.ui.adapter;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import android.app.Activity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.vconference.R;
 import com.example.vconference.VApp;
+import com.example.vconference.custom.objects.VUser;
 import com.quickblox.chat.model.QBDialog;
 import com.quickblox.chat.model.QBDialogType;
 import com.quickblox.users.model.QBUser;
@@ -21,6 +24,7 @@ public class ChatRoomAdapter extends BaseAdapter {
 	private LayoutInflater inflater;
 	private Activity activity;
 	private VApp app;
+	Map<Integer, VUser> userMap;
 
 	public ChatRoomAdapter(List<QBDialog> dataSource, Activity activity) {
 		this.dataSource = dataSource;
@@ -29,6 +33,7 @@ public class ChatRoomAdapter extends BaseAdapter {
 		this.inflater = LayoutInflater.from(activity);
 		this.activity = activity;
 		this.app = (VApp) this.activity.getApplication();
+		userMap = app.getDialogsUsers();
 	}
 
 	public List<QBDialog> getDataSource() {
@@ -63,9 +68,12 @@ public class ChatRoomAdapter extends BaseAdapter {
 		if (convertView == null) {
 			convertView = inflater.inflate(R.layout.listview_item_room, null);
 			holder = new ViewHolder();
+			holder.roomImage = (ImageView) convertView.findViewById(R.id.roomImage);
+			holder.numGroupChatUsers = (TextView) convertView.findViewById(R.id.numGroupChatUsers);
 			holder.name = (TextView) convertView.findViewById(R.id.roomName);
 			holder.lastMessage = (TextView) convertView.findViewById(R.id.lastMessage);
-			holder.groupType = (TextView) convertView.findViewById(R.id.textViewGroupType);
+			holder.lastMessageTime = (TextView) convertView.findViewById(R.id.lastMessageTime);
+			// holder.groupType = (TextView) convertView.findViewById(R.id.textViewGroupType);
 			convertView.setTag(holder);
 		} else {
 			holder = (ViewHolder) convertView.getTag();
@@ -77,9 +85,14 @@ public class ChatRoomAdapter extends BaseAdapter {
 		StringBuilder sb = new StringBuilder(dialog.getType().toString());
 
 		if (dialog.getType().equals(QBDialogType.PUBLIC_GROUP)) {
-			holder.name.setText(dialog.getName());
+			holder.name.setText(getGroupDialogName(dialog));
+			holder.roomImage.setImageResource(R.drawable.ic_room);
+			holder.numGroupChatUsers.setVisibility(View.GONE);
 		} else if (dialog.getType().equals(QBDialogType.GROUP)) {
-			holder.name.setText(dialog.getName());
+			holder.roomImage.setImageResource(R.drawable.ic_room);
+			holder.numGroupChatUsers.setText(String.valueOf(dialog.getOccupants().size()));
+			holder.numGroupChatUsers.setVisibility(View.VISIBLE);
+			holder.name.setText(getGroupDialogName(dialog));
 			sb.append(": ");
 			ArrayList<Integer> userIds = dialog.getOccupants();
 			for (int i = 0; i < userIds.size(); i++) {
@@ -88,8 +101,8 @@ public class ChatRoomAdapter extends BaseAdapter {
 					sb.append(", ");
 			}
 		} else {
-			// get opponent name for private dialog
-			//
+			holder.roomImage.setImageResource(R.drawable.ic_user);
+			holder.numGroupChatUsers.setVisibility(View.GONE);
 			Integer opponentID = app.getOpponentIDForPrivateDialog(dialog);
 			QBUser user = app.getDialogsUsers().get(opponentID);
 			if (user != null) {
@@ -98,15 +111,51 @@ public class ChatRoomAdapter extends BaseAdapter {
 		}
 
 		holder.lastMessage.setText(dialog.getLastMessage());
-		holder.groupType.setText(sb);
+		if (VApp.isToday(dialog.getLastMessageDateSent())) {
+			holder.lastMessageTime.setText(VApp.getTimeText(dialog.getLastMessageDateSent()));
+		} else {
+			if (dialog.getLastMessage() == null) {
+				holder.lastMessageTime.setText(VApp.getDateText(dialog.getCreatedAt()));
+			} else
+				holder.lastMessageTime.setText(VApp.getDateText(dialog.getLastMessageDateSent()));
+		}
 
 		return convertView;
 	}
 
+	private String getGroupDialogName(QBDialog dialog) {
+		if (dialog.getName().equals(VApp.GROUP_CHAT_NAME_NOT_DEFIEND)) {
+			return usersListToChatName(dialog.getOccupants());
+		} else {
+			return dialog.getName();
+		}
+	}
+
+	private String usersListToChatName(List<Integer> occupants) {
+		List<VUser> vUserList = new ArrayList<VUser>();
+		for (Integer id : occupants) {
+			VUser vUser = userMap.get(id);
+			if (!vUser.equals(app.getUser())) {
+				vUserList.add(vUser);
+			}
+		}
+
+		String chatName = "";
+		for (VUser user : vUserList) {
+			String prefix = chatName.equals("") ? "" : ", ";
+			chatName = chatName + prefix + app.getUserNameById(user.getId());
+			// chatName = chatName + prefix + user.getLogin();
+		}
+		return chatName;
+	}
+
 	private static class ViewHolder {
+		ImageView roomImage;
+		TextView numGroupChatUsers;
 		TextView name;
 		TextView lastMessage;
-		TextView groupType;
+		TextView lastMessageTime;
+		// TextView groupType;
 	}
 
 	public void setDataSource(List<QBDialog> dialogs) {

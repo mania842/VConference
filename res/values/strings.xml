@@ -30,6 +30,10 @@
 	<!-- chatroom -->
 	<string name="unknown">Unknown</string>
 	<string name="leave_chatroom">Leave Chatroom</string>
+	<string name="select_friends">Select Friends</string>
+	<string name="group_chat">Group Chat</string>
+	<string name="create_chatroom">Create Chatroom</string>
+	<string name="invite">Invite</string>
 	
 	<!-- settings -->
 	<string name="account">Account</string>

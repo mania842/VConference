@@ -13,13 +13,14 @@ import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.View.OnKeyListener;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.ProgressBar;
 
 import com.example.vconference.R;
-import com.example.vconference.Settings;
 import com.example.vconference.VApp;
 import com.example.vconference.custom.objects.Contact;
 import com.example.vconference.custom.objects.ContactList;
@@ -38,7 +39,6 @@ public class AddFriendActivity extends Activity {
 	private ContactAdapter adapter;
 	private ProgressBar progressBar;
 
-	private Settings settings;
 	private ContactList contactList;
 	private FriendList friendList;
 	private VApp app;
@@ -56,7 +56,6 @@ public class AddFriendActivity extends Activity {
 		setContentView(R.layout.activity_friend_list);
 
 		app = (VApp) getApplication();
-		settings = Settings.getInstance();
 		myUser = app.getUser();
 		contactList = ContactList.getInstance();
 
@@ -72,6 +71,16 @@ public class AddFriendActivity extends Activity {
 			contactTask = new ContactTask();
 			contactTask.execute();
 		}
+		
+		searchText.setOnKeyListener(new OnKeyListener() {
+			@Override
+			public boolean onKey(View v, int keyCode, KeyEvent event) {
+				if (searchText.getText().length() == 0 && contactTask == null) {
+					setAdapter(contactList.getAllContactList());
+				}
+				return false;
+			}
+		});
 	}
 
 	public void SearchFriend(View view) {
@@ -278,8 +287,7 @@ public class AddFriendActivity extends Activity {
 								Collections.sort(userContactlist);
 								contactList.setAllContactList(allContactList);
 								contactList.setUserContactlist(userContactlist);
-
-								if (!hasSearchedByLoginOrEmail && searchText.getText().length() > 0) {
+								if (!hasSearchedByLoginOrEmail && searchText.getText().length() == 0) {
 									setAdapter(contactList.getAllContactList());
 									hasSearchedByLoginOrEmail = false;
 								}
@@ -287,6 +295,7 @@ public class AddFriendActivity extends Activity {
 								contactList.save();
 								isGettingContactList = false;
 								progressBar.setVisibility(View.GONE);
+								contactTask = null;
 							}
 
 							@Override

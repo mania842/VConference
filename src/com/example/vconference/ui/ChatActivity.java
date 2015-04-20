@@ -46,6 +46,7 @@ import com.quickblox.chat.QBChatService;
 import com.quickblox.chat.QBPrivateChat;
 import com.quickblox.chat.model.QBChatMessage;
 import com.quickblox.chat.model.QBDialog;
+import com.quickblox.chat.model.QBDialogType;
 import com.quickblox.core.QBCallbackImpl;
 import com.quickblox.core.QBEntityCallbackImpl;
 import com.quickblox.core.request.QBRequestGetBuilder;
@@ -61,6 +62,9 @@ public class ChatActivity extends Activity {
 	public static final String VIDEO = "VIDEO";
 	public static final String VIDEO_STARTED = "VIDEO STARTED";
 	public static final String VIDEO_ENDED = "VIDEO ENDED";
+	
+	public static final String INVITING_USER = "INVITING_USER";
+	public static final String INVITED_USERS = "INVITED_USERS";
 
 	public static final String EXTRA_MODE = "mode";
 	public static final String EXTRA_DIALOG = "dialog";
@@ -77,9 +81,6 @@ public class ChatActivity extends Activity {
 	private QBDialog dialog;
 
 	private ArrayList<QBChatMessage> history;
-
-	private Button addButton;
-	private Button getOccupants;
 
 	private OpponentSurfaceView opponentView;
 	private OwnSurfaceView myView;
@@ -104,21 +105,29 @@ public class ChatActivity extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_chat);
-
+		getActionBar().setDisplayHomeAsUpEnabled(true);
+		
 		app = (VApp) getApplication();
 		initViews();
 		initVideoCalls();
 
-		if (dialog.getUserId().equals(app.getUser().getId())) {
-			isAdmin = true;
-		} else {
-			isAdmin = false;
+		if (dialog.getType() == QBDialogType.PRIVATE)
+			getActionBar().setTitle(app.getUserNameById(dialog.getUserId()));
+		else if (dialog.getType() == QBDialogType.GROUP) {
+			if (dialog.getName().equals(VApp.GROUP_CHAT_NAME_NOT_DEFIEND)) {
+				getActionBar().setTitle(getString(R.string.group_chat));
+			} else {
+				getActionBar().setTitle(dialog.getName());
+			}
+			
 		}
+		
+		isAdmin = dialog.getUserId().equals(app.getUser().getId());
 		initRightMenuView();
 
 		refreshCameraInfo();
 	}
-
+	
 	private void initRightMenuView() {
 		slide_me = new SimpleSideDrawer(this);
 		slide_me.setRightBehindContentView(R.layout.right_menu);
@@ -126,7 +135,15 @@ public class ChatActivity extends Activity {
 		ArrayList<VUser> vUsers = ((VApp) getApplication()).getVUsersWithoutMe(dialog.getOccupants());
 		adapterContact = new ContactListAdapter(vUsers, this, dialog);
 
+		View line = slide_me.findViewById(R.id.line);
 		startVideo = (LinearLayout) slide_me.findViewById(R.id.startVideo);
+		if (isAdmin) {
+			startVideo.setVisibility(View.VISIBLE);
+			line.setVisibility(View.VISIBLE);
+		} else {
+			startVideo.setVisibility(View.GONE);
+			line.setVisibility(View.GONE);
+		}
 		startVideo.setOnClickListener(new OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -141,6 +158,19 @@ public class ChatActivity extends Activity {
 			}
 		});
 		contactList.setAdapter(adapterContact);
+		
+		final Button btn_invite = (Button) slide_me.findViewById(R.id.btn_invite);
+		btn_invite.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				Intent intent = new Intent(ChatActivity.this, NewGroupChatActivity.class);
+				intent.putExtra(NewGroupChatActivity.MODE_INVITE, true);
+				intent.putIntegerArrayListExtra(NewGroupChatActivity.INVITE_OCCUPANTS, dialog.getOccupants());
+				intent.putExtra(NewGroupChatActivity.INVITING_DIALOG, dialog); 
+				
+				startActivityForResult(intent, NewGroupChatActivity.REQUEST_CODE);
+			}
+		});
 
 		final LinearLayout leaveChat = (LinearLayout) slide_me.findViewById(R.id.leaveChat);
 		leaveChat.setOnClickListener(new OnClickListener() {
@@ -178,8 +208,6 @@ public class ChatActivity extends Activity {
 					if (isChanged) {
 						// TODO
 					}
-
-					System.out.println("@@@@@@@@@@@@@@@@@@@@@@@ isCameraSharing @@@@@@@@@@@@@@@@@ " + fields.get("cameraSharing") + " " + isCameraSharing);
 				}
 			}
 
@@ -251,7 +279,6 @@ public class ChatActivity extends Activity {
 
 			}
 		});
-		// QBChatService.getInstance().getGroupChatManager().getGroupChat(dialog.getRoomJid())
 		// Send chat message
 		//
 		QBChatMessage chatMessage = new QBChatMessage();
@@ -334,9 +361,6 @@ public class ChatActivity extends Activity {
 		messageEditText = (EditText) findViewById(R.id.messageEdit);
 		sendButton = (Button) findViewById(R.id.chatSendButton);
 
-		addButton = (Button) findViewById(R.id.chatAddButton);
-		getOccupants = (Button) findViewById(R.id.getoccupants);
-
 		RelativeLayout container = (RelativeLayout) findViewById(R.id.container);
 		progressBar = (ProgressBar) findViewById(R.id.progressBar);
 
@@ -415,50 +439,40 @@ public class ChatActivity extends Activity {
 			}
 		});
 
-		addButton.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				((GroupChatManagerImpl) chat).inviteUser(dialog, 2759018, new QBEntityCallbackImpl() {
-					@Override
-					public void onSuccess() {
-						for (Integer userID : dialog.getOccupants()) {
-
-							QBChatMessage chatMessage = GroupChatManagerImpl.createChatNotificationForGroupChatUpdate(dialog);
-							long time = new Date().getTime();
-							chatMessage.setProperty("date_sent", time + "");
-							QBChatService chatService = QBChatService.getInstance();
-							QBPrivateChat chat = QBChatService.getInstance().getPrivateChatManager().getChat(userID);
-							if (chat == null) {
-								chat = chatService.getPrivateChatManager().createChat(userID, null);
-							}
-
-							try {
-								chat.sendMessage(chatMessage);
-							} catch (Exception e) {
-								// error
-							}
-						}
-					}
-
-					@Override
-					public void onError(List list) {
-						AlertDialog.Builder dialog = new AlertDialog.Builder(ChatActivity.this);
-						dialog.setMessage("error when join group chat: " + list.toString()).create().show();
-					}
-				});
-
-			}
-		});
-		getOccupants.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				System.out.println("Clicked");
-				System.out.println("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
-				// System.out.println(((GroupChatManagerImpl) chat).getRoomUsers());
-				System.out.println(((GroupChatManagerImpl) chat).getOnlineUsers());
-			}
-
-		});
+//		addButton.setOnClickListener(new View.OnClickListener() {
+//			@Override
+//			public void onClick(View v) {
+//				((GroupChatManagerImpl) chat).inviteUser(dialog, 2759018, new QBEntityCallbackImpl() {
+//					@Override
+//					public void onSuccess() {
+//						for (Integer userID : dialog.getOccupants()) {
+//
+//							QBChatMessage chatMessage = GroupChatManagerImpl.createChatNotificationForGroupChatUpdate(dialog);
+//							long time = new Date().getTime();
+//							chatMessage.setProperty("date_sent", time + "");
+//							QBChatService chatService = QBChatService.getInstance();
+//							QBPrivateChat chat = QBChatService.getInstance().getPrivateChatManager().getChat(userID);
+//							if (chat == null) {
+//								chat = chatService.getPrivateChatManager().createChat(userID, null);
+//							}
+//
+//							try {
+//								chat.sendMessage(chatMessage);
+//							} catch (Exception e) {
+//								// error
+//							}
+//						}
+//					}
+//
+//					@Override
+//					public void onError(List list) {
+//						AlertDialog.Builder dialog = new AlertDialog.Builder(ChatActivity.this);
+//						dialog.setMessage("error when join group chat: " + list.toString()).create().show();
+//					}
+//				});
+//
+//			}
+//		});
 	}
 
 	private void loadChatHistory() {
@@ -622,4 +636,60 @@ public class ChatActivity extends Activity {
 		}
 		return super.onOptionsItemSelected(item);
 	}
+	
+	@Override
+	public boolean onMenuItemSelected(int featureId, MenuItem item) {
+		switch (item.getItemId()) {
+		case android.R.id.home:
+			onBackPressed();
+			break;
+		}
+		return super.onMenuItemSelected(featureId, item);
+	}
+
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+		if (requestCode == NewGroupChatActivity.REQUEST_CODE) {
+			if (resultCode == Activity.RESULT_OK) {
+				boolean creatingNewGroup = data.getBooleanExtra(NewGroupChatActivity.CREATING_NEW_GROUP, false);
+				if (creatingNewGroup) {
+					finish();
+				} else {
+					dialog = (QBDialog) data.getSerializableExtra(NewGroupChatActivity.INVITING_DIALOG);
+					ArrayList<Integer> invitedUserIds = data.getIntegerArrayListExtra(NewGroupChatActivity.INVITED_USER_IDS);
+					initRightMenuView();
+					System.out.println(invitedUserIds);
+					slide_me.toggleRightDrawer();
+					
+					QBChatMessage chatMessage = new QBChatMessage();
+					VUser me = app.getUser(); 
+					chatMessage.setProperty(INVITING_USER, String.valueOf(me.getId()));
+					
+					String userIdsStr = "";
+					for (Integer userId : invitedUserIds) {
+						userIdsStr += userId + " ";
+					}
+					chatMessage.setProperty(INVITED_USERS, userIdsStr.trim());
+					chatMessage.setProperty(PROPERTY_SAVE_TO_HISTORY, "1");
+					chatMessage.setDateSent(new Date().getTime() / 1000);
+
+					try {
+						chat.sendMessage(chatMessage);
+					} catch (XMPPException e) {
+						Log.e(TAG, "failed to send a message", e);
+					} catch (SmackException sme) {
+						Log.e(TAG, "failed to send a message", sme);
+					}
+
+					if (mode == Mode.PRIVATE) {
+						showMessage(chatMessage);
+					}
+				}
+			}
+		}
+		// TODO Auto-generated method stub
+		super.onActivityResult(requestCode, resultCode, data);
+	}
+	
+	
 }

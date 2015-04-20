@@ -1,27 +1,36 @@
 package com.example.vconference;
 
+import java.text.Format;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import android.app.Application;
 import android.content.Intent;
+import android.text.format.DateFormat;
 
 import com.example.vconference.custom.objects.ChatRoomList;
 import com.example.vconference.custom.objects.ContactList;
 import com.example.vconference.custom.objects.FriendList;
 import com.example.vconference.custom.objects.VUser;
 import com.quickblox.chat.QBChatService;
+import com.quickblox.chat.model.QBChatMessage;
 import com.quickblox.chat.model.QBDialog;
 import com.quickblox.core.QBSettings;
 
 public class VApp extends Application {
 	public static String APP_PATH;
+	final public static String GROUP_CHAT_NAME_NOT_DEFIEND = "?/NotDefiend/?"; 
 	private VUser user;
 	private Map<Integer, VUser> dialogsUsers = new HashMap<Integer, VUser>();
 	private Map<String, VUser> dialogsUsersNameMap = new HashMap<String, VUser>();
 	private static VApp instance = null;
+	
+	private static Format DATEFORMAT;
+	private static Format TIMEFORMAT;
 	
 	public static VApp getInstance() {
 		return instance;
@@ -76,6 +85,9 @@ public class VApp extends Application {
 		this.dialogsUsers = chatRoomList.getDialogsUsers();
 		this.dialogsUsersNameMap = chatRoomList.getDialogsUsersNameMap();
 		
+		
+		DATEFORMAT = DateFormat.getMediumDateFormat(getApplicationContext());
+		TIMEFORMAT = DateFormat.getTimeFormat(getApplicationContext());
 	}
 	
 	
@@ -163,4 +175,63 @@ public class VApp extends Application {
         }
         return opponentID;
 	}
+	
+	static public String getDateText(QBChatMessage message) {
+		long time = message.getDateSent() * 1000;
+		Date date = new Date(time);
+		// Format format = new SimpleDateFormat("yyyy MM dd HH:mm:ss");
+		return DATEFORMAT.format(date);
+	}
+	static public String getDateText(Date date) {
+		return DATEFORMAT.format(date);
+	}
+	static public String getDateText(long time) {
+		time *= 1000;
+		Date date = new Date(time);
+		return DATEFORMAT.format(date);
+	}
+	static public String getTimeText(QBChatMessage message) {
+		long time = message.getDateSent() * 1000;
+		Date date = new Date(time);
+		return TIMEFORMAT.format(date);
+	}
+	static public String getTimeText(long time) {
+		time *= 1000;
+		Date date = new Date(time);
+		return TIMEFORMAT.format(date);
+	}
+	
+	public static boolean isSameDay(QBChatMessage message1, QBChatMessage message2) {
+		long time1 = message1.getDateSent() * 1000;
+		Date date1 = new Date(time1);
+		long time2 = message2.getDateSent() * 1000;
+		Date date2 = new Date(time2);
+		return isSameDay(date1, date2);
+		
+	}
+	public static boolean isSameDay(Date date1, Date date2) {
+		if (date1 == null || date2 == null) {
+			throw new IllegalArgumentException("The dates must not be null");
+		}
+		Calendar cal1 = Calendar.getInstance();
+		cal1.setTime(date1);
+		Calendar cal2 = Calendar.getInstance();
+		cal2.setTime(date2);
+		return isSameDay(cal1, cal2);
+	}
+	public static boolean isSameDay(Calendar cal1, Calendar cal2) {
+		if (cal1 == null || cal2 == null) {
+			throw new IllegalArgumentException("The dates must not be null");
+		}
+		return (cal1.get(Calendar.ERA) == cal2.get(Calendar.ERA) && cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) && cal1.get(Calendar.DAY_OF_YEAR) == cal2
+				.get(Calendar.DAY_OF_YEAR));
+	}
+	public static boolean isToday(Date date) {
+        return isSameDay(date, Calendar.getInstance().getTime());
+    }
+	public static boolean isToday(long time) {
+		time *= 1000;
+		Date date = new Date(time);
+        return isSameDay(date, Calendar.getInstance().getTime());
+    }
 }

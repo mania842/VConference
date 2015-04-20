@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="?android:attr/buttonBarButtonStyle"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent" >
+
+    <ImageView
+        android:id="@+id/profileIcon"
+        android:layout_width="30dp"
+        android:layout_height="30dp"
+        android:layout_alignParentLeft="true"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp"
+        android:layout_marginTop="10dp"
+        android:paddingLeft="5dp"
+        android:paddingRight="5dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_user" />
+
+    <ImageView
+        android:id="@+id/removeIcon"
+        android:layout_width="15dp"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignRight="@+id/profileIcon"
+        android:layout_marginRight="-5dp"
+        android:src="@drawable/button_remove_released" />
+
+    <TextView
+        android:id="@+id/contactName"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignRight="@+id/removeIcon"
+        android:layout_below="@+id/profileIcon"
+        android:layout_marginRight="-10dp"
+        android:ellipsize="end"
+        android:gravity="center_horizontal"
+        android:singleLine="true"
+        android:text="asdfasdfasdf"
+        android:textColor="#000" />
+
+</RelativeLayout>

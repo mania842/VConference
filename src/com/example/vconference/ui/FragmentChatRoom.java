@@ -234,36 +234,11 @@ public class FragmentChatRoom extends Fragment {
 		int id = item.getItemId();
 		if (id == R.id.new_chat) {
 
-			// go to New Dialog activity
-			//
-			Intent intent = new Intent(getActivity(), NewDialogActivity.class);
+//			Intent intent = new Intent(getActivity(), NewDialogActivity.class);
+			Intent intent = new Intent(getActivity(), NewGroupChatActivity.class);
 			startActivity(intent);
-			
-			
-//			Bundle bundle = new Bundle();
-//
-//			// Open chat activity
-//			//
-//			NewDialogActivity.start(getActivity(), bundle);
 			return true;
 		}
 		return super.onOptionsItemSelected(item);
 	}
-	// void buildListView(List<QBDialog> dialogs) {
-	// adapter = new ChatRoomAdapter(dialogs, getActivity());
-	// dialogsListView.setAdapter(adapter);
-	//
-	// progressBar.setVisibility(View.GONE);
-	//
-	// }
-
-	// @Override
-	// public boolean onCreateOptionsMenu(Menu menu) {
-	// MenuInflater inflater = getMenuInflater();
-	// inflater.inflate(R.menu.rooms, menu);
-	// return true;
-	// }
-
-	
-
 }

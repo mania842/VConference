@@ -1,35 +1,61 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="horizontal">
+    android:layout_height="wrap_content"
+    android:padding="5dp" >
 
     <ImageView
         android:id="@+id/roomImage"
-        android:layout_width="80dp"
-        android:layout_height="80dp"
-        android:padding="5dp"
-        android:src="@drawable/ic_room"
-        android:scaleType="centerCrop" />
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:scaleType="centerCrop"
+        android:layout_marginRight="10dp"
+        android:src="@drawable/ic_room" />
+
+    <TextView
+        android:id="@+id/numGroupChatUsers"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#808080"
+        android:textSize="13sp"
+        android:layout_alignRight="@+id/roomImage"
+        android:layout_alignBottom="@+id/roomImage" 
+        android:text="15"/>
 
     <TextView
         android:id="@+id/roomName"
-        android:layout_toRightOf="@+id/roomImage"
-        android:layout_width="match_parent"
+        android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:textSize="20sp" />
-    <TextView
-        android:id="@+id/lastMessage"
-        android:layout_below="@+id/roomName"
+        android:layout_toLeftOf="@+id/lastMessageTime"
         android:layout_toRightOf="@+id/roomImage"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:textSize="20sp" />
+        android:ellipsize="marquee"
+        android:singleLine="true"
+        android:textSize="15sp"
+        android:textStyle="bold" />
 
     <TextView
+        android:id="@+id/lastMessage"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/roomName"
+        android:layout_gravity="center_vertical"
+        android:layout_toRightOf="@+id/roomImage"
+        android:lines="2"
+        android:textColor="#808080"
+        android:textSize="13sp" />
+
+    <TextView
+        android:id="@+id/lastMessageTime"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_marginLeft="5dp"
+        android:text="date"
+        android:textColor="#808080"
+        android:textSize="13sp" />
+
+    <!--
+         <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="?android:attr/textAppearanceSmall"
@@ -37,5 +63,6 @@
         android:id="@+id/textViewGroupType"
         android:layout_below="@+id/lastMessage"
         android:layout_toRightOf="@+id/roomImage" />
+    -->
 
 </RelativeLayout>

@@ -40,7 +40,7 @@ import com.quickblox.customobjects.model.QBCustomObject;
 import com.quickblox.users.QBUsers;
 import com.quickblox.users.model.QBUser;
 
-public class FragmentContacts extends Fragment {
+public class FragmentFriends extends Fragment {
 	private boolean isFirstLoad = true;
 	private VApp app;
 	private VUser myUser;
@@ -65,7 +65,7 @@ public class FragmentContacts extends Fragment {
 		friendListView = (ListView) layout.findViewById(R.id.list);
 		showSwitch = (Switch) layout.findViewById(R.id.showSwitch);
 		showSwitch.setVisibility(View.GONE);
-		
+
 		if (isFirstLoad) {
 			setAdapter();
 			new GetFriendList().execute();
@@ -75,15 +75,14 @@ public class FragmentContacts extends Fragment {
 				adapter.setDataSource(friendList.getFriendList());
 				friendListView.setAdapter(adapter);
 			}
-				
+
 		}
 
 		friendListView.setOnItemClickListener(new OnItemClickListener() {
 			@Override
 			public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-				// TODO
-				// Contact contact = adapter.getItem(position);
-				// joinToSingleDialog(contact.getUser());
+				VUser vUser = adapter.getItem(position);
+				joinToSingleDialog(vUser);
 			}
 		});
 		return layout;
@@ -225,13 +224,13 @@ public class FragmentContacts extends Fragment {
 			adapter.notifyDataSetChanged();
 		}
 	}
-	
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setHasOptionsMenu(true);
 	}
-	
+
 	@Override
 	public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
 		inflater.inflate(R.menu.friendlists, menu);

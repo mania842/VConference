@@ -57,7 +57,14 @@
         </activity>
         <activity android:name="SignupActivity" >
         </activity>
-        <activity android:name=".ui.ProfileActivity"></activity>
+        <activity android:name=".ui.ProfileActivity" >
+        </activity>
+        <activity
+            android:name=".ui.NewGroupChatActivity"
+            android:label="@string/select_friends"
+            android:windowSoftInputMode="stateHidden" >
+        </activity>
+        <activity android:name=".ui.ProfileEditActivity"></activity>
     </application>
 
 </manifest>

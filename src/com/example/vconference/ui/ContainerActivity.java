@@ -109,7 +109,7 @@ public class ContainerActivity extends FragmentActivity {
 
 	@Override
 	public void onResume() {
-		FragmentContacts fragmentContacts = (FragmentContacts) tabAdapter.getItem(0);
+		FragmentFriends fragmentContacts = (FragmentFriends) tabAdapter.getItem(0);
 		if (fragmentContacts.isAdded())
 			fragmentContacts.refreshFriendList();
 		super.onResume();

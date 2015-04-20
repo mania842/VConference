@@ -81,4 +81,11 @@ public class VUser extends QBUser implements Serializable {
 			return "{status:\"" + status + "\"}";
 		}
 	}
+
+//	@Override
+//	public String toString() {
+//		return getFullName();
+//	}
+	
+	
 }
